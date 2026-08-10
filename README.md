@@ -1,5 +1,9 @@
 # GridQuery
 
+[![CI](https://github.com/Bioye97/gq/actions/workflows/ci.yml/badge.svg)](https://github.com/Bioye97/gq/actions/workflows/ci.yml)
+[![Documentation](https://github.com/Bioye97/gq/actions/workflows/pages.yml/badge.svg)](https://bioye97.github.io/gq/)
+[![License](https://img.shields.io/github/license/Bioye97/gq)](https://github.com/Bioye97/gq/blob/main/LICENSE)
+
 ## What is GQ?
 
 GQ (GridQuery) is a collection of command-line programs for merging multiscale 
@@ -36,6 +40,7 @@ Building GQ requires:
 
 * [BLEND 2.0 or newer](https://github.com/Bioye97/blend)
 * [GMT 6.5 or newer](https://github.com/GenericMappingTools/gmt)
+* [GDAL development package](https://gdal.org/) (normally installed with GMT)
 * [netCDF-C 4.1.3 or newer](https://docs.unidata.ucar.edu/netcdf-c/current/),
   built with netCDF-4/HDF5 support
 * CMake 3.15 or newer
@@ -43,10 +48,17 @@ Building GQ requires:
 
 Building the documentation requires Python 3, Sphinx, and
 `sphinx_rtd_theme`. A LaTeX installation with `latexmk` is required to build
-the PDF manual. Some example data-preparation scripts require the `curl` or
-GDAL command-line utilities but neither is required to build GQ.
+the PDF manual. Some example data-preparation scripts additionally require
+the `curl` or GDAL command-line utilities.
 
 ## Building and installation
+
+Clone the GQ source repository and move into the source directory:
+
+```sh
+git clone https://github.com/Bioye97/gq.git
+cd gq
+```
 
 Create a local configuration file by copying `cmake/ConfigUserTemplate.cmake`
 to `cmake/ConfigUser.cmake`. Edit `cmake/ConfigUser.cmake` before configuring 

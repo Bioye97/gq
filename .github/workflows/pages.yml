@@ -1,0 +1,134 @@
+#
+# Copyright (c) 2024-2026 by the CRESCENT CVM Team (https://cascadiaquakes.org/cvm/)
+# See LICENSE for copying and redistribution conditions.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation; version 3 or any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# Contact info: abioyeajala@gmail.com (Rasheed Ajala)
+#-------------------------------------------------------------------------------
+#
+
+name: Publish documentation
+
+on:
+  push:
+    branches:
+      - devel
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build documentation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout GQ
+        uses: actions/checkout@v6
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            cmake \
+            gmt \
+            libgmt-dev \
+            libgdal-dev \
+            libnetcdf-dev \
+            netcdf-bin
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: doc/rst/requirements.txt
+
+      - name: Install documentation dependencies
+        run: python -m pip install -r doc/rst/requirements.txt
+
+      - name: Checkout BLEND 2.0.0
+        uses: actions/checkout@v6
+        with:
+          repository: Bioye97/blend
+          ref: v2.0.0
+          path: _deps/blend-source
+
+      - name: Build and install BLEND
+        run: |
+          cmake -S _deps/blend-source -B _deps/blend-build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="${RUNNER_TEMP}/blend" \
+            -DBLEND_BUILD_TESTS=OFF \
+            -DBLEND_BUILD_EXAMPLES=OFF \
+            -DBLEND_BUILD_DOCS=OFF
+          cmake --build _deps/blend-build --parallel
+          cmake --install _deps/blend-build
+
+      - name: Configure GQ documentation
+        run: |
+          cmake -S . -B build-docs \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="${RUNNER_TEMP}/blend" \
+            -DBLEND_ROOT="${RUNNER_TEMP}/blend" \
+            -DGQ_INSTALL_PLUGINDIR="${RUNNER_TEMP}/gq-doc-plugin" \
+            -DGQ_BUILD_TESTS=OFF \
+            -DGQ_BUILD_EXAMPLES=OFF \
+            -DGQ_BUILD_DOCS=ON \
+            -DSPHINX_BUILD_EXECUTABLE="$(command -v sphinx-build)"
+
+      - name: Generate usage and example pages
+        run: |
+          export LD_LIBRARY_PATH="${RUNNER_TEMP}/blend/lib:${RUNNER_TEMP}/blend/lib64:${LD_LIBRARY_PATH:-}"
+          cmake --build build-docs --target docs_usage docs_examples --parallel
+
+      - name: Build development documentation
+        env:
+          GQ_DOC_VERSION: devel
+          GQ_DOC_CURRENT_VERSION: devel
+          GQ_DOC_GITHUB_VERSION: ${{ github.ref_name }}
+          GQ_DOC_VERSIONS: '[["devel","https://bioye97.github.io/gq/"]]'
+        run: |
+          export GQ_DOC_USAGE_DIR="${GITHUB_WORKSPACE}/build-docs/doc/usage"
+          sphinx-build -W --keep-going -b html \
+            build-docs/doc/source build/site
+          test -f build/site/index.html
+          touch build/site/.nojekyll
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v6
+
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: build/site
+
+  deploy:
+    name: Deploy documentation
+    runs-on: ubuntu-latest
+    needs: build
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

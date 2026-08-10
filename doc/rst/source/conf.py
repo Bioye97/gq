@@ -43,6 +43,9 @@ html_js_files = ["gq.js"]
 html_show_sourcelink = False
 html_show_sphinx = True
 
+github_repository = "https://github.com/Bioye97/gq"
+github_version = os.environ.get("GQ_DOC_GITHUB_VERSION", "devel")
+
 
 def _gq_versions():
     default_versions = [(release, "")]
@@ -67,6 +70,26 @@ html_context = {
     "gq_current_version": os.environ.get("GQ_DOC_CURRENT_VERSION", release),
     "gq_versions": _gq_versions(),
 }
+
+
+def _github_source_path(pagename):
+    parts = pagename.split("/")
+    if parts[0] != "examples":
+        return f"doc/rst/source/{pagename}.rst"
+    if len(parts) == 4 and parts[-1] == "index":
+        return f"doc/examples/{parts[1]}/{parts[2]}/README.md"
+    return "doc/rst/generate_examples.py"
+
+
+def _add_github_edit_link(app, pagename, templatename, context, doctree):
+    if pagename in {"genindex", "search"}:
+        return
+    source_path = _github_source_path(pagename)
+    metadata = dict(context.get("meta") or {})
+    metadata["github_url"] = (
+        f"{github_repository}/blob/{github_version}/{source_path}"
+    )
+    context["meta"] = metadata
 
 latex_documents = [
     (master_doc, "gq.tex", "GQ Documentation", author, "manual"),
@@ -120,4 +143,5 @@ class GQUsageDirective(Directive):
 
 def setup(app):
     app.add_directive("gq-usage", GQUsageDirective)
+    app.connect("html-page-context", _add_github_edit_link)
     return {"version": release, "parallel_read_safe": True}

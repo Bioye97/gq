@@ -102,6 +102,7 @@ jobs:
         env:
           GQ_DOC_VERSION: devel
           GQ_DOC_CURRENT_VERSION: devel
+          GQ_DOC_GITHUB_VERSION: ${{ github.ref_name }}
           GQ_DOC_VERSIONS: '[["devel","https://bioye97.github.io/gq/"]]'
         run: |
           export GQ_DOC_USAGE_DIR="${GITHUB_WORKSPACE}/build-docs/doc/usage"

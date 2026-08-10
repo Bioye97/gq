@@ -49,6 +49,13 @@ the `curl` or GDAL command-line utilities.
 
 ## Building and installation
 
+Clone the GQ source repository and move into the source directory:
+
+```sh
+git clone https://github.com/Bioye97/gq.git
+cd gq
+```
+
 Create a local configuration file by copying `cmake/ConfigUserTemplate.cmake`
 to `cmake/ConfigUser.cmake`. Edit `cmake/ConfigUser.cmake` before configuring 
 to set the GQ installation prefix, dependency locations, the GMT plugin directory, 

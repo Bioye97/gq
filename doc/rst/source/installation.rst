@@ -33,6 +33,16 @@ activate that environment before configuring GQ. Alternatively, you canset
 ``Python3_EXECUTABLE`` and ``SPHINX_BUILD_EXECUTABLE`` in the user
 configuration file ``cmake/ConfigUser.cmake``.
 
+Obtain the source
+-----------------
+
+Clone the GQ source repository and move into the source directory:
+
+.. code-block:: sh
+
+   git clone https://github.com/Bioye97/gq.git
+   cd gq
+
 Configuration
 -------------
 

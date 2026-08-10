@@ -19,7 +19,7 @@ perform its processing tasks. The driving goal of GQ is to provide a flexible an
 accessible platform to trivialize model and data processing tasks usually performed
 before their application (e.g., physics-based simulations).
 
-Full documentation: 
+Full documentation: [https://ajalalab.com/gq/](https://ajalalab.com/gq/)
 
 GQ currently provides eight modules:
 

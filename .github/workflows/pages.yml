@@ -37,10 +37,21 @@ jobs:
     name: Build documentation
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    env:
+      GQ_DOC_VERSIONS: '[["devel","https://bioye97.github.io/gq/"],["1.0.0","https://bioye97.github.io/gq/1.0.0/"]]'
 
     steps:
-      - name: Checkout GQ
+      - name: Checkout GQ development source
         uses: actions/checkout@v6
+        with:
+          ref: devel
+
+      - name: Checkout GQ 1.0.0 source
+        uses: actions/checkout@v6
+        with:
+          repository: Bioye97/gq
+          ref: v1.0.0
+          path: _versions/gq-1.0.0
 
       - name: Install system dependencies
         run: |
@@ -81,7 +92,7 @@ jobs:
           cmake --build _deps/blend-build --parallel
           cmake --install _deps/blend-build
 
-      - name: Configure GQ documentation
+      - name: Configure development documentation
         run: |
           cmake -S . -B build-docs \
             -DCMAKE_BUILD_TYPE=Release \
@@ -93,23 +104,50 @@ jobs:
             -DGQ_BUILD_DOCS=ON \
             -DSPHINX_BUILD_EXECUTABLE="$(command -v sphinx-build)"
 
-      - name: Generate usage and example pages
+      - name: Generate development usage and example pages
         run: |
           export LD_LIBRARY_PATH="${RUNNER_TEMP}/blend/lib:${RUNNER_TEMP}/blend/lib64:${LD_LIBRARY_PATH:-}"
           cmake --build build-docs --target docs_usage docs_examples --parallel
+
+      - name: Configure 1.0.0 documentation
+        run: |
+          cmake -S _versions/gq-1.0.0 -B build-docs-1.0.0 \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="${RUNNER_TEMP}/blend" \
+            -DBLEND_ROOT="${RUNNER_TEMP}/blend" \
+            -DGQ_INSTALL_PLUGINDIR="${RUNNER_TEMP}/gq-1.0.0-doc-plugin" \
+            -DGQ_BUILD_TESTS=OFF \
+            -DGQ_BUILD_EXAMPLES=OFF \
+            -DGQ_BUILD_DOCS=ON \
+            -DSPHINX_BUILD_EXECUTABLE="$(command -v sphinx-build)"
+
+      - name: Generate 1.0.0 usage and example pages
+        run: |
+          export LD_LIBRARY_PATH="${RUNNER_TEMP}/blend/lib:${RUNNER_TEMP}/blend/lib64:${LD_LIBRARY_PATH:-}"
+          cmake --build build-docs-1.0.0 --target docs_usage docs_examples --parallel
 
       - name: Build development documentation
         env:
           GQ_DOC_VERSION: devel
           GQ_DOC_CURRENT_VERSION: devel
-          GQ_DOC_GITHUB_VERSION: ${{ github.ref_name }}
-          GQ_DOC_VERSIONS: '[["devel","https://bioye97.github.io/gq/"]]'
+          GQ_DOC_GITHUB_VERSION: devel
         run: |
           export GQ_DOC_USAGE_DIR="${GITHUB_WORKSPACE}/build-docs/doc/usage"
           sphinx-build -W --keep-going -b html \
             build-docs/doc/source build/site
           test -f build/site/index.html
           touch build/site/.nojekyll
+
+      - name: Build 1.0.0 documentation
+        env:
+          GQ_DOC_VERSION: 1.0.0
+          GQ_DOC_CURRENT_VERSION: 1.0.0
+          GQ_DOC_GITHUB_VERSION: v1.0.0
+        run: |
+          export GQ_DOC_USAGE_DIR="${GITHUB_WORKSPACE}/build-docs-1.0.0/doc/usage"
+          sphinx-build -W --keep-going -b html \
+            build-docs-1.0.0/doc/source build/site/1.0.0
+          test -f build/site/1.0.0/index.html
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v6

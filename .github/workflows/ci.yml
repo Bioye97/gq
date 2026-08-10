@@ -121,13 +121,13 @@ jobs:
       - name: Smoke test installed plug-in
         shell: bash
         run: |
+          set -eux
           plugin="${RUNNER_TEMP}/gq/lib/gmt/plugins/gq.so"
           test -f "${plugin}"
           export LD_LIBRARY_PATH="${RUNNER_TEMP}/blend/lib:${RUNNER_TEMP}/blend/lib64:${LD_LIBRARY_PATH:-}"
           export DYLD_LIBRARY_PATH="${RUNNER_TEMP}/blend/lib:${RUNNER_TEMP}/blend/lib64:${DYLD_LIBRARY_PATH:-}"
-          export GMT_CUSTOM_LIBS="${plugin}"
-          gmt --show-modules | grep -q merge1d
-          gmt merge1d -? >/dev/null
+          gmt set GMT_CUSTOM_LIBS "${plugin}"
+          gmt --show-modules | grep -qx merge1d
 
   docs:
     name: Build HTML documentation

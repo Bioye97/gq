@@ -46,6 +46,14 @@ if (UNIX AND NOT GMT_FOUND)
 	)
 
 	if (GMT_CONFIG)
+		execute_process (COMMAND ${GMT_CONFIG} --includedir
+			RESULT_VARIABLE GMT_CONFIG_INCLUDEDIR_STATUS
+			ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE
+			OUTPUT_VARIABLE GMT_CONFIG_INCLUDEDIR)
+		execute_process (COMMAND ${GMT_CONFIG} --libdir
+			RESULT_VARIABLE GMT_CONFIG_LIBDIR_STATUS
+			ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE
+			OUTPUT_VARIABLE GMT_CONFIG_LIBDIR)
 		execute_process (COMMAND ${GMT_CONFIG} --cflags
 			ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE
 			OUTPUT_VARIABLE GMT_CONFIG_CFLAGS)
@@ -58,10 +66,15 @@ if (UNIX AND NOT GMT_FOUND)
 			ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE
 			OUTPUT_VARIABLE GMT_CONFIG_LIBS)
 		if (GMT_CONFIG_LIBS)
-			string (REGEX MATCHALL "-l[^ ]+" _gmt_dashl ${GMT_CONFIG_LIBS})
-			string (REGEX REPLACE "-l" "" _gmt_lib "${_gmt_dashl}")
-			string (REGEX MATCHALL "-L[^ ]+" _gmt_dashL ${GMT_CONFIG_LIBS})
-			string (REGEX REPLACE "-L" "" _gmt_libpath "${_gmt_dashL}")
+			separate_arguments (_gmt_config_lib_tokens UNIX_COMMAND
+				"${GMT_CONFIG_LIBS}")
+			foreach (_gmt_config_lib_token IN LISTS _gmt_config_lib_tokens)
+				if (_gmt_config_lib_token MATCHES "^-l(.+)$")
+					list (APPEND _gmt_lib "${CMAKE_MATCH_1}")
+				elseif (_gmt_config_lib_token MATCHES "^-L(.+)$")
+					list (APPEND _gmt_libpath "${CMAKE_MATCH_1}")
+				endif ()
+			endforeach ()
 		endif (GMT_CONFIG_LIBS)
 	endif (GMT_CONFIG)
 	if (_gmt_lib)
@@ -69,6 +82,22 @@ if (UNIX AND NOT GMT_FOUND)
 		list (REMOVE_ITEM _gmt_lib gmt)
 	endif (_gmt_lib)
 endif (UNIX AND NOT GMT_FOUND)
+
+if (NOT GMT_INCLUDE_DIR
+		AND GMT_CONFIG_INCLUDEDIR_STATUS EQUAL 0
+		AND EXISTS "${GMT_CONFIG_INCLUDEDIR}/gmt.h")
+	set (GMT_INCLUDE_DIR "${GMT_CONFIG_INCLUDEDIR}" CACHE PATH
+		"Directory containing gmt.h")
+endif ()
+
+if (NOT GMT_LIBRARY AND GMT_CONFIG_LIBDIR_STATUS EQUAL 0)
+	set (_gmt_config_library
+		"${GMT_CONFIG_LIBDIR}/${CMAKE_SHARED_LIBRARY_PREFIX}gmt${CMAKE_SHARED_LIBRARY_SUFFIX}")
+	if (EXISTS "${_gmt_config_library}")
+		set (GMT_LIBRARY "${_gmt_config_library}" CACHE FILEPATH
+			"GMT shared library")
+	endif ()
+endif ()
 
 find_path (GMT_INCLUDE_DIR gmt.h
 	HINTS
@@ -118,7 +147,9 @@ foreach (_extralib ${_gmt_lib})
 	find_library (_found_lib_${_extralib}
 		NAMES ${_extralib}
 		PATHS ${_gmt_libpath})
-	list (APPEND GMT_LIBRARY ${_found_lib_${_extralib}})
+	if (_found_lib_${_extralib})
+		list (APPEND GMT_LIBRARY ${_found_lib_${_extralib}})
+	endif ()
 endforeach (_extralib)
 
 include (FindPackageHandleStandardArgs)

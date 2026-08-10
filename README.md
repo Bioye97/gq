@@ -1,5 +1,9 @@
 # GridQuery
 
+[![CI](https://github.com/Bioye97/gq/actions/workflows/ci.yml/badge.svg)](https://github.com/Bioye97/gq/actions/workflows/ci.yml)
+[![Documentation](https://github.com/Bioye97/gq/actions/workflows/pages.yml/badge.svg)](https://bioye97.github.io/gq/)
+[![License](https://img.shields.io/github/license/Bioye97/gq)](https://github.com/Bioye97/gq/blob/main/LICENSE)
+
 ## What is GQ?
 
 GQ (GridQuery) is a collection of command-line programs for merging multiscale 

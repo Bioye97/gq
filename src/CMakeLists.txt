@@ -58,7 +58,8 @@ endif (WIN32)
 # Find libraries
 message (STATUS "Searching dependent libraries. This may take a few minutes...")
 find_package (GMT REQUIRED)
-include_directories (${GMT_INCLUDE_DIR})
+find_package (GDAL REQUIRED)
+include_directories (${GMT_INCLUDE_DIRS})
 
 if (NOT GQ_INSTALL_PLUGINDIR)
 	set (_gq_install_plugindir)
@@ -117,6 +118,7 @@ endforeach ()
 set (GQ_BLEND_LIBRARY "${_gq_blend_library}" PARENT_SCOPE)
 set (GQ_BLEND_INCLUDE_DIR "${BLEND_INCLUDE_DIRS}" PARENT_SCOPE)
 set (GQ_BLEND_VERSION "${BLEND_VERSION}" PARENT_SCOPE)
+set (GQ_GDAL_INCLUDE_DIR "${GDAL_INCLUDE_DIRS}" PARENT_SCOPE)
 
 # Support glue code for the modules.
 set (GQ_GLUE_SOURCE ${CMAKE_PROJECT_NAME}_glue.c)
@@ -131,7 +133,8 @@ add_library (gqlib MODULE
 	${GQ_SOURCES})
 
 target_include_directories (gqlib PRIVATE
-	"${CMAKE_CURRENT_BINARY_DIR}")
+	"${CMAKE_CURRENT_BINARY_DIR}"
+	${GDAL_INCLUDE_DIRS})
 
 target_link_libraries (gqlib
 	${GMT_LIBRARIES}

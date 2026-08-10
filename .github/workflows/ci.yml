@@ -44,7 +44,7 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - ubuntu-latest
+          - ubuntu-24.04
           - macos-latest
 
     steps:
@@ -59,12 +59,19 @@ jobs:
             cmake \
             gmt \
             libgmt-dev \
+            libgdal-dev \
             libnetcdf-dev \
             netcdf-bin
 
       - name: Install macOS dependencies
         if: runner.os == 'macOS'
-        run: brew install cmake gmt netcdf
+        run: brew install cmake gdal gmt netcdf
+
+      - name: Report dependency versions
+        run: |
+          gmt --version
+          nc-config --version
+          cmake --version
 
       - name: Checkout BLEND 2.0.0
         uses: actions/checkout@v6
@@ -124,7 +131,7 @@ jobs:
 
   docs:
     name: Build HTML documentation
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
 
     steps:
@@ -138,6 +145,7 @@ jobs:
             cmake \
             gmt \
             libgmt-dev \
+            libgdal-dev \
             libnetcdf-dev \
             netcdf-bin
 

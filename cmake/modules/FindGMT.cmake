@@ -81,11 +81,19 @@ find_path (GMT_INCLUDE_DIR gmt.h
 	include/gmt
 	include
 	PATHS
+	/usr
+	/usr/local
 	/sw # Fink
 	/opt/local # DarwinPorts
 	/opt/csw # Blastwave
 	/opt
 )
+
+set (_gmt_library_suffixes lib64 lib)
+if (CMAKE_LIBRARY_ARCHITECTURE)
+	list (PREPEND _gmt_library_suffixes
+		"lib/${CMAKE_LIBRARY_ARCHITECTURE}")
+endif ()
 
 find_library (GMT_LIBRARY
 	NAMES gmt
@@ -95,8 +103,10 @@ find_library (GMT_LIBRARY
 	${GMT_ROOT}
 	$ENV{GMT_DIR}
 	$ENV{GMT_ROOT}
-	PATH_SUFFIXES lib64 lib
+	PATH_SUFFIXES ${_gmt_library_suffixes}
 	PATHS
+	/usr
+	/usr/local
 	/sw
 	/opt/local
 	/opt/csw

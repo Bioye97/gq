@@ -8,6 +8,8 @@ To build GQ, install:
 
 * `BLEND 2.0 or newer <https://github.com/Bioye97/blend>`_
 * `GMT 6.5 or newer <https://github.com/GenericMappingTools/gmt>`_
+* `GDAL development package <https://gdal.org/>`_ (normally installed with
+  GMT)
 * `NetCDF-C 4.1.3 or newer <https://docs.unidata.ucar.edu/netcdf-c/current/>`_,
   built with netCDF-4/HDF5 support
 * CMake 3.15 or newer
@@ -17,8 +19,8 @@ GQ also links directly to the netCDF-C library and uses its netCDF-4/HDF5 API.
 
 To build the documentation, install Python 3, Sphinx, and
 ``sphinx_rtd_theme``. LaTeX and ``latexmk`` are only needed if you want to
-build the PDF. Some data preparation scripts in the examples require the ``curl`` 
-or GDAL command-line utilities but neither is required to build GQ. The Python
+build the PDF. Some data preparation scripts in the examples additionally
+require the ``curl`` or GDAL command-line utilities. The Python
 requirements are listed in
 ``doc/rst/requirements.txt`` and can be installed with:
 

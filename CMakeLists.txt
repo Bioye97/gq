@@ -343,6 +343,7 @@ message(
 	"*  Locations:\n"              
 	"*  GMT library found       : ${GMT_LIBRARY}\n"
 	"*  GMT include dir found   : ${GMT_INCLUDE_DIR}\n"
+	"*  GDAL include dir found  : ${GQ_GDAL_INCLUDE_DIR}\n"
 	"*  BLEND library found     : ${GQ_BLEND_LIBRARY} (version ${GQ_BLEND_VERSION})\n"
 	"*  BLEND include dir found : ${GQ_BLEND_INCLUDE_DIR}\n"
 	"*  Project name            : ${CMAKE_PROJECT_NAME}\n"

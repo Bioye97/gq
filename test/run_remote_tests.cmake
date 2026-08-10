@@ -20,6 +20,8 @@ file(MAKE_DIRECTORY "${GQ_TEST_DIR}")
 set(GMT_USERDIR "${GQ_TEST_DIR}/gmt")
 set(GMT_CACHE "${GMT_USERDIR}/cache")
 file(MAKE_DIRECTORY "${GMT_CACHE}")
+file(WRITE "${GQ_TEST_DIR}/gmt.conf"
+	"GMT_DATA_UPDATE_INTERVAL = off\n")
 
 function(run_checked)
 	execute_process(
@@ -34,11 +36,13 @@ function(run_checked)
 endfunction()
 
 function(run_remote runner)
+	message(STATUS "Testing cached remote input: ${ARGN}")
 	execute_process(
 		COMMAND "${CMAKE_COMMAND}" -E env
 		        "GQ_PLUGIN=${GQ_PLUGIN}"
 		        "GMT_USERDIR=${GMT_USERDIR}"
 		        "${runner}" ${ARGN}
+		WORKING_DIRECTORY "${GQ_TEST_DIR}"
 		RESULT_VARIABLE status
 		OUTPUT_VARIABLE output
 		ERROR_VARIABLE error

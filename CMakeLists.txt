@@ -335,7 +335,7 @@ if (GQ_BUILD_TESTS)
 			-DGQ_TEST_DIR=${CMAKE_BINARY_DIR}/test-output-remote
 			-P ${CMAKE_SOURCE_DIR}/test/run_remote_tests.cmake
 	)
-	set_tests_properties(remote-input.integration PROPERTIES TIMEOUT 120)
+	set_tests_properties(remote-input.integration PROPERTIES TIMEOUT 300)
 endif ()
 
 # Configuration done

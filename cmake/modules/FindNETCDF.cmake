@@ -46,6 +46,14 @@ if (UNIX AND NOT NETCDF_FOUND)
 	)
 
 	if (NETCDF_CONFIG)
+		execute_process (COMMAND ${NETCDF_CONFIG} --includedir
+			RESULT_VARIABLE NETCDF_CONFIG_INCLUDEDIR_STATUS
+			ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE
+			OUTPUT_VARIABLE NETCDF_CONFIG_INCLUDEDIR)
+		execute_process (COMMAND ${NETCDF_CONFIG} --libdir
+			RESULT_VARIABLE NETCDF_CONFIG_LIBDIR_STATUS
+			ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE
+			OUTPUT_VARIABLE NETCDF_CONFIG_LIBDIR)
 		execute_process (COMMAND ${NETCDF_CONFIG} --cflags
 			ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE
 			OUTPUT_VARIABLE NETCDF_CONFIG_CFLAGS)
@@ -58,10 +66,15 @@ if (UNIX AND NOT NETCDF_FOUND)
 			ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE
 			OUTPUT_VARIABLE NETCDF_CONFIG_LIBS)
 		if (NETCDF_CONFIG_LIBS)
-			string (REGEX MATCHALL "-l[^ ]+" _netcdf_dashl ${NETCDF_CONFIG_LIBS})
-			string (REGEX REPLACE "-l" "" _netcdf_lib "${_netcdf_dashl}")
-			string (REGEX MATCHALL "-L[^ ]+" _netcdf_dashL ${NETCDF_CONFIG_LIBS})
-			string (REGEX REPLACE "-L" "" _netcdf_libpath "${_netcdf_dashL}")
+			separate_arguments (_netcdf_config_lib_tokens UNIX_COMMAND
+				"${NETCDF_CONFIG_LIBS}")
+			foreach (_netcdf_config_lib_token IN LISTS _netcdf_config_lib_tokens)
+				if (_netcdf_config_lib_token MATCHES "^-l(.+)$")
+					list (APPEND _netcdf_lib "${CMAKE_MATCH_1}")
+				elseif (_netcdf_config_lib_token MATCHES "^-L(.+)$")
+					list (APPEND _netcdf_libpath "${CMAKE_MATCH_1}")
+				endif ()
+			endforeach ()
 		endif (NETCDF_CONFIG_LIBS)
 	endif (NETCDF_CONFIG)
 	if (_netcdf_lib)
@@ -69,6 +82,22 @@ if (UNIX AND NOT NETCDF_FOUND)
 		list (REMOVE_ITEM _netcdf_lib netcdf)
 	endif (_netcdf_lib)
 endif (UNIX AND NOT NETCDF_FOUND)
+
+if (NOT NETCDF_INCLUDE_DIR
+		AND NETCDF_CONFIG_INCLUDEDIR_STATUS EQUAL 0
+		AND EXISTS "${NETCDF_CONFIG_INCLUDEDIR}/netcdf.h")
+	set (NETCDF_INCLUDE_DIR "${NETCDF_CONFIG_INCLUDEDIR}" CACHE PATH
+		"Directory containing netcdf.h")
+endif ()
+
+if (NOT NETCDF_LIBRARY AND NETCDF_CONFIG_LIBDIR_STATUS EQUAL 0)
+	set (_netcdf_config_library
+		"${NETCDF_CONFIG_LIBDIR}/${CMAKE_SHARED_LIBRARY_PREFIX}netcdf${CMAKE_SHARED_LIBRARY_SUFFIX}")
+	if (EXISTS "${_netcdf_config_library}")
+		set (NETCDF_LIBRARY "${_netcdf_config_library}" CACHE FILEPATH
+			"NetCDF shared library")
+	endif ()
+endif ()
 
 find_path (NETCDF_INCLUDE_DIR netcdf.h
 	HINTS
@@ -89,6 +118,12 @@ find_path (NETCDF_INCLUDE_DIR netcdf.h
 	/opt
 )
 
+set (_netcdf_library_suffixes lib64 lib)
+if (CMAKE_LIBRARY_ARCHITECTURE)
+	list (PREPEND _netcdf_library_suffixes
+		"lib/${CMAKE_LIBRARY_ARCHITECTURE}")
+endif ()
+
 find_library (NETCDF_LIBRARY
 	NAMES netcdf
 	HINTS
@@ -97,7 +132,7 @@ find_library (NETCDF_LIBRARY
 	${NETCDF_ROOT}
 	$ENV{NETCDF_DIR}
 	$ENV{NETCDF_ROOT}
-	PATH_SUFFIXES lib64 lib
+	PATH_SUFFIXES ${_netcdf_library_suffixes}
 	PATHS
 	/sw
 	/opt/local
@@ -110,7 +145,9 @@ foreach (_extralib ${_netcdf_lib})
 	find_library (_found_lib_${_extralib}
 		NAMES ${_extralib}
 		PATHS ${_netcdf_libpath})
-	list (APPEND NETCDF_LIBRARY ${_found_lib_${_extralib}})
+	if (_found_lib_${_extralib})
+		list (APPEND NETCDF_LIBRARY ${_found_lib_${_extralib}})
+	endif ()
 endforeach (_extralib)
 
 if (NETCDF_LIBRARY AND NETCDF_INCLUDE_DIR AND NOT HAVE_NETCDF4)

@@ -1,0 +1,188 @@
+#
+# Copyright (c) 2024-2026 by the CRESCENT CVM Team (https://cascadiaquakes.org/cvm/)
+# See LICENSE for copying and redistribution conditions.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation; version 3 or any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# Contact info: abioyeajala@gmail.com (Rasheed Ajala)
+#-------------------------------------------------------------------------------
+#
+
+name: CI
+
+on:
+  push:
+    branches:
+      - devel
+      - main
+  pull_request:
+    branches:
+      - devel
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    name: Build and test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+
+    steps:
+      - name: Checkout GQ
+        uses: actions/checkout@v6
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            cmake \
+            gmt \
+            libgmt-dev \
+            libnetcdf-dev \
+            netcdf-bin
+
+      - name: Install macOS dependencies
+        if: runner.os == 'macOS'
+        run: brew install cmake gmt netcdf
+
+      - name: Checkout BLEND 2.0.0
+        uses: actions/checkout@v6
+        with:
+          repository: Bioye97/blend
+          ref: v2.0.0
+          path: _deps/blend-source
+
+      - name: Build and install BLEND
+        shell: bash
+        run: |
+          cmake -S _deps/blend-source -B _deps/blend-build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="${RUNNER_TEMP}/blend" \
+            -DBLEND_BUILD_TESTS=OFF \
+            -DBLEND_BUILD_EXAMPLES=OFF \
+            -DBLEND_BUILD_DOCS=OFF
+          cmake --build _deps/blend-build --parallel
+          cmake --install _deps/blend-build
+
+      - name: Configure GQ
+        shell: bash
+        run: |
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="${RUNNER_TEMP}/gq" \
+            -DCMAKE_PREFIX_PATH="${RUNNER_TEMP}/blend" \
+            -DBLEND_ROOT="${RUNNER_TEMP}/blend" \
+            -DGQ_INSTALL_PLUGINDIR="${RUNNER_TEMP}/gq/lib/gmt/plugins" \
+            -DGQ_BUILD_TESTS=ON \
+            -DGQ_BUILD_EXAMPLES=ON \
+            -DGQ_BUILD_DOCS=OFF
+
+      - name: Build GQ
+        run: cmake --build build --parallel
+
+      - name: Run tests
+        shell: bash
+        run: |
+          export LD_LIBRARY_PATH="${RUNNER_TEMP}/blend/lib:${RUNNER_TEMP}/blend/lib64:${LD_LIBRARY_PATH:-}"
+          export DYLD_LIBRARY_PATH="${RUNNER_TEMP}/blend/lib:${RUNNER_TEMP}/blend/lib64:${DYLD_LIBRARY_PATH:-}"
+          ctest --test-dir build --output-on-failure --timeout 300
+
+      - name: Install GQ
+        run: cmake --install build
+
+      - name: Smoke test installed plug-in
+        shell: bash
+        run: |
+          plugin="${RUNNER_TEMP}/gq/lib/gmt/plugins/gq.so"
+          test -f "${plugin}"
+          export LD_LIBRARY_PATH="${RUNNER_TEMP}/blend/lib:${RUNNER_TEMP}/blend/lib64:${LD_LIBRARY_PATH:-}"
+          export DYLD_LIBRARY_PATH="${RUNNER_TEMP}/blend/lib:${RUNNER_TEMP}/blend/lib64:${DYLD_LIBRARY_PATH:-}"
+          export GMT_CUSTOM_LIBS="${plugin}"
+          gmt --show-modules | grep -q merge1d
+          gmt merge1d -? >/dev/null
+
+  docs:
+    name: Build HTML documentation
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout GQ
+        uses: actions/checkout@v6
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            cmake \
+            gmt \
+            libgmt-dev \
+            libnetcdf-dev \
+            netcdf-bin
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: doc/rst/requirements.txt
+
+      - name: Install documentation dependencies
+        run: python -m pip install -r doc/rst/requirements.txt
+
+      - name: Checkout BLEND 2.0.0
+        uses: actions/checkout@v6
+        with:
+          repository: Bioye97/blend
+          ref: v2.0.0
+          path: _deps/blend-source
+
+      - name: Build and install BLEND
+        run: |
+          cmake -S _deps/blend-source -B _deps/blend-build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="${RUNNER_TEMP}/blend" \
+            -DBLEND_BUILD_TESTS=OFF \
+            -DBLEND_BUILD_EXAMPLES=OFF \
+            -DBLEND_BUILD_DOCS=OFF
+          cmake --build _deps/blend-build --parallel
+          cmake --install _deps/blend-build
+
+      - name: Configure documentation
+        run: |
+          cmake -S . -B build-docs \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="${RUNNER_TEMP}/blend" \
+            -DBLEND_ROOT="${RUNNER_TEMP}/blend" \
+            -DGQ_INSTALL_PLUGINDIR="${RUNNER_TEMP}/gq-doc-plugin" \
+            -DGQ_BUILD_TESTS=OFF \
+            -DGQ_BUILD_EXAMPLES=OFF \
+            -DGQ_BUILD_DOCS=ON \
+            -DSPHINX_BUILD_EXECUTABLE="$(command -v sphinx-build)"
+
+      - name: Build HTML documentation
+        shell: bash
+        run: |
+          export LD_LIBRARY_PATH="${RUNNER_TEMP}/blend/lib:${RUNNER_TEMP}/blend/lib64:${LD_LIBRARY_PATH:-}"
+          cmake --build build-docs --target docs_html --parallel

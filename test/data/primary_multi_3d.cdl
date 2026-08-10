@@ -1,0 +1,33 @@
+netcdf primary_multi_3d {
+dimensions:
+	depth = 3 ;
+	y = 3 ;
+	x = 3 ;
+variables:
+	double depth(depth) ;
+		depth:axis = "Z" ;
+		depth:units = "m" ;
+	double y(y) ;
+		y:axis = "Y" ;
+		y:units = "km" ;
+	double x(x) ;
+		x:axis = "X" ;
+		x:units = "km" ;
+	float vp(depth, y, x) ;
+		vp:units = "km/s" ;
+		vp:_FillValue = -9999.f ;
+	float den(depth, y, x) ;
+		den:units = "kg/m3" ;
+data:
+	depth = 0, -1000, -2000 ;
+	y = 0, 1, 2 ;
+	x = 0, 1, 2 ;
+	vp =
+	 100, 101, 102, 101, 102, 103, 102, 103, 104,
+	 110, 111, 112, 111, 112, 113, 112, 113, 114,
+	 120, 121, 122, 121, 122, 123, 122, 123, 124 ;
+	den =
+	 200, 202, 204, 202, 204, 206, 204, 206, 208,
+	 220, 222, 224, 222, 224, 226, 224, 226, 228,
+	 240, 242, 244, 242, 244, 246, 244, 246, 248 ;
+}

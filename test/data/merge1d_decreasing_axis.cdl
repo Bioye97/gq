@@ -1,0 +1,12 @@
+netcdf merge1d_decreasing_axis {
+dimensions:
+	depth = 3 ;
+variables:
+	double depth(depth) ;
+		depth:units = "m" ;
+	double vp(depth) ;
+		vp:units = "km/s" ;
+data:
+	depth = 4000, -6000, -16000 ;
+	vp = 4, 10, 16 ;
+}

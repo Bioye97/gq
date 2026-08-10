@@ -1,0 +1,41 @@
+netcdf topobath_horizontal_gaps {
+dimensions:
+	z = 3 ;
+	y = 5 ;
+	x = 5 ;
+variables:
+	double z(z) ;
+		z:axis = "Z" ;
+		z:units = "km" ;
+		z:positive = "down" ;
+	double y(y) ;
+		y:axis = "Y" ;
+		y:units = "km" ;
+	double x(x) ;
+		x:axis = "X" ;
+		x:units = "km" ;
+	float vp(z, y, x) ;
+		vp:long_name = "compressional velocity" ;
+		vp:units = "km/s" ;
+		vp:_FillValue = -9999.f ;
+data:
+	z = 0, 1, 2 ;
+	y = 0, 1, 2, 3, 4 ;
+	x = 0, 1, 2, 3, 4 ;
+	vp =
+	 10, 10, 10, 10, 10,
+	 10, 10, 10, 10, 10,
+	 10, 10, 10, 10, 10,
+	 10, 10, 10, 10, 10,
+	 10, 10, 10, 10, 10,
+	 8, 8, 8, 8, 8,
+	 8, -9999, -9999, 8, 8,
+	 8, -9999, -9999, 8, 8,
+	 8, 8, 8, 8, 8,
+	 8, 8, 8, 8, 8,
+	 6, 6, 6, 6, 6,
+	 6, 6, 6, 6, 6,
+	 6, 6, 6, 6, 6,
+	 6, 6, 6, 6, 6,
+	 6, 6, 6, 6, 6 ;
+}

@@ -1,0 +1,31 @@
+netcdf topobath_unresolved {
+dimensions:
+	z = 3 ;
+	y = 2 ;
+	x = 2 ;
+variables:
+	double z(z) ;
+		z:axis = "Z" ;
+		z:units = "km" ;
+		z:positive = "down" ;
+	double y(y) ;
+		y:axis = "Y" ;
+		y:units = "km" ;
+	double x(x) ;
+		x:axis = "X" ;
+		x:units = "km" ;
+	float vp(z, y, x) ;
+		vp:units = "km/s" ;
+		vp:_FillValue = -9999.f ;
+data:
+	z = -1, 0, 1 ;
+	y = 0, 1 ;
+	x = 0, 1 ;
+	vp =
+	 -9999, -9999,
+	 -9999, -9999,
+	 7, -9999,
+	 7, -9999,
+	 6, -9999,
+	 6, -9999 ;
+}

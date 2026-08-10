@@ -1,0 +1,26 @@
+netcdf elygtl_scaled_model {
+dimensions:
+	z = 3 ;
+	y = 2 ;
+	x = 2 ;
+variables:
+	double z(z) ;
+		z:axis = "Z" ;
+		z:units = "km" ;
+		z:positive = "down" ;
+	double y(y) ;
+		y:axis = "Y" ;
+	double x(x) ;
+		x:axis = "X" ;
+	float vs(z, y, x) ;
+		vs:units = "km s-1" ;
+		vs:_FillValue = -9999.f ;
+data:
+	z = 0, 0.175, 0.35 ;
+	y = 0, 1 ;
+	x = 0, 1 ;
+	vs =
+	 0.6, 0.6, 0.6, 0.6,
+	 0.8, 0.8, 0.8, 0.8,
+	 1, 1, 1, 1 ;
+}

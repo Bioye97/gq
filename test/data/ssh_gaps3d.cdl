@@ -1,0 +1,35 @@
+// Copyright (c) 2024-2026 by the CRESCENT CVM Team (https://cascadiaquakes.org/cvm/)
+// See LICENSE for copying and redistribution conditions.
+netcdf ssh_gaps3d {
+dimensions:
+	z = 3 ;
+	y = 3 ;
+	x = 3 ;
+variables:
+	double z(z) ;
+		z:axis = "Z" ;
+	double y(y) ;
+		y:axis = "Y" ;
+	double x(x) ;
+		x:axis = "X" ;
+	float horizontal(z, y, x) ;
+		horizontal:_FillValue = NaNf ;
+	float vertical(z, y, x) ;
+		vertical:_FillValue = NaNf ;
+	float marker(z, y, x) ;
+	int model_id ;
+data:
+	z = 0, 1, 2 ;
+	y = 0, 1, 2 ;
+	x = 0, 1, 2 ;
+	horizontal = 100, 100, 100, 100, _, 100, 100, 100, 100,
+	             100, 100, 100, 100, _, 100, 100, 100, 100,
+	             100, 100, 100, 100, _, 100, 100, 100, 100 ;
+	vertical = 100, 100, 100, 100, 100, 100, 100, 100, 100,
+	           _, _, _, _, _, _, _, _, _,
+	           300, 300, 300, 300, 300, 300, 300, 300, 300 ;
+	marker = 9, 9, 9, 9, 9, 9, 9, 9, 9,
+	         9, 9, 9, 9, 9, 9, 9, 9, 9,
+	         9, 9, 9, 9, 9, 9, 9, 9, 9 ;
+	model_id = 24 ;
+}

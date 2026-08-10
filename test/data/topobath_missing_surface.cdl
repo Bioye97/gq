@@ -1,0 +1,33 @@
+netcdf topobath_missing_surface {
+dimensions:
+	z = 3 ;
+	y = 2 ;
+	x = 2 ;
+variables:
+	double z(z) ;
+		z:axis = "Z" ;
+		z:units = "km" ;
+		z:positive = "down" ;
+	double y(y) ;
+		y:axis = "Y" ;
+		y:units = "km" ;
+	double x(x) ;
+		x:axis = "X" ;
+		x:units = "km" ;
+	float vp(z, y, x) ;
+		vp:_FillValue = -9999.f ;
+	float vs(z, y, x) ;
+		vs:_FillValue = -9999.f ;
+data:
+	z = 0, 1, 2 ;
+	y = 0, 1 ;
+	x = 0, 1 ;
+	vp =
+	 -9999, -9999, -9999, -9999,
+	 9, 9, 9, 9,
+	 8, 8, 8, 8 ;
+	vs =
+	 20, 20, 20, 20,
+	 18, 18, 18, 18,
+	 16, 16, 16, 16 ;
+}

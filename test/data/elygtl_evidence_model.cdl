@@ -1,0 +1,42 @@
+// Copyright (c) 2024-2026 by the CRESCENT CVM Team (https://cascadiaquakes.org/cvm/)
+// See LICENSE for copying and redistribution conditions.
+
+netcdf elygtl_evidence_model {
+dimensions:
+	z = 3 ;
+	y = 2 ;
+	x = 2 ;
+variables:
+	double z(z) ;
+		z:axis = "Z" ;
+		z:units = "m" ;
+		z:positive = "down" ;
+	double y(y) ;
+		y:axis = "Y" ;
+		y:units = "m" ;
+	double x(x) ;
+		x:axis = "X" ;
+		x:units = "m" ;
+	float vp(z, y, x) ;
+		vp:_FillValue = -9999.f ;
+	float vs(z, y, x) ;
+		vs:_FillValue = -9999.f ;
+	float rho(z, y, x) ;
+		rho:_FillValue = -9999.f ;
+data:
+	z = 0, 100, 200 ;
+	y = 0, 1 ;
+	x = 0, 1 ;
+	vp =
+	 2000, 1510, 2100, -9999,
+	 2200, 1510, 2300, 2300,
+	 2400, 2400, 2500, 2500 ;
+	vs =
+	 600, 0, 700, -9999,
+	 800, 0, 900, 900,
+	 1000, 1000, 1100, 1100 ;
+	rho =
+	 2500, 1010, 2550, -9999,
+	 2600, 1010, 2650, 2650,
+	 2700, 2700, 2750, 2750 ;
+}

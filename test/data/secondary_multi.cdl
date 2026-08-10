@@ -1,0 +1,38 @@
+netcdf secondary_multi {
+dimensions:
+	y = 5 ;
+	x = 5 ;
+variables:
+	double y(y) ;
+		y:actual_range = 0., 4. ;
+	double x(x) ;
+		x:actual_range = 0., 4. ;
+	float p(y, x) ;
+	float s(y, x) ;
+	float d(y, x) ;
+
+// global attributes:
+		:Conventions = "COARDS" ;
+		:node_offset = 0 ;
+data:
+	y = 0, 1, 2, 3, 4 ;
+	x = 0, 1, 2, 3, 4 ;
+	p =
+	  2, 2, 2, 2, 2,
+	  2, 2, 2, 2, 2,
+	  2, 2, 2, 2, 2,
+	  2, 2, 2, 2, 2,
+	  2, 2, 2, 2, 2 ;
+	s =
+	  4, 4, 4, 4, 4,
+	  4, 4, 4, 4, 4,
+	  4, 4, 4, 4, 4,
+	  4, 4, 4, 4, 4,
+	  4, 4, 4, 4, 4 ;
+	d =
+	  6, 6, 6, 6, 6,
+	  6, 6, 6, 6, 6,
+	  6, 6, 6, 6, 6,
+	  6, 6, 6, 6, 6,
+	  6, 6, 6, 6, 6 ;
+}

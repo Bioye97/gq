@@ -1,0 +1,34 @@
+#
+# Copyright (c) 2024-2026 by the CRESCENT CVM Team (https://cascadiaquakes.org/cvm/)
+# See LICENSE for copying and redistribution conditions.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation; version 3 or any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# Contact info: abioyeajala@gmail.com (Rasheed Ajala)
+#-------------------------------------------------------------------------------
+#
+
+set (manifest "@CMAKE_BINARY_DIR@/install_manifest.txt")
+
+if (NOT EXISTS "${manifest}")
+	message (FATAL_ERROR
+		"Cannot uninstall GQ: ${manifest} does not exist. Install GQ first.")
+endif ()
+
+file (STRINGS "${manifest}" installed_files)
+foreach (installed_file IN LISTS installed_files)
+	set (path "$ENV{DESTDIR}${installed_file}")
+	if (EXISTS "${path}" OR IS_SYMLINK "${path}")
+		message (STATUS "Removing ${path}")
+		file (REMOVE "${path}")
+	else ()
+		message (STATUS "Already absent: ${path}")
+	endif ()
+endforeach ()

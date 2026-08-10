@@ -1,0 +1,16 @@
+netcdf ssh_model1d {
+dimensions:
+	x = 5 ;
+variables:
+	double x(x) ;
+		x:axis = "X" ;
+		x:units = "km" ;
+	float a(x) ;
+		a:units = "a0" ;
+	float b(x) ;
+		b:units = "b0" ;
+data:
+	x = 0, 1, 2, 3, 4 ;
+	a = 10, 10, 10, 10, 10 ;
+	b = 20, 20, 20, 20, 20 ;
+}

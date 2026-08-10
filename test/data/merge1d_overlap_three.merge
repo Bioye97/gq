@@ -1,0 +1,4 @@
+test/data/merge1d_primary1.txt test/data/merge1d_background.txt 0/6 boxcar 0
+test/data/merge1d_primary2.txt test/data/merge1d_background.txt 4/10 boxcar 0
+test/data/merge1d_primary_overlap3.txt test/data/merge1d_background.txt 2/8 boxcar 0
+test/data/merge1d_background.txt - - - -

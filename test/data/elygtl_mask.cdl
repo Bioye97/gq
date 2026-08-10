@@ -1,0 +1,19 @@
+netcdf elygtl_mask {
+dimensions:
+	y = 2 ;
+	x = 2 ;
+variables:
+	double y(y) ;
+		y:axis = "Y" ;
+		y:units = "m" ;
+	double x(x) ;
+		x:axis = "X" ;
+		x:units = "m" ;
+	float mask(y, x) ;
+data:
+	y = 0, 1 ;
+	x = 0, 1 ;
+	mask =
+	 1, 0,
+	 1, 1 ;
+}

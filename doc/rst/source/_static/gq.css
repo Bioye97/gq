@@ -1,0 +1,76 @@
+:root {
+  --gq-blue: #2980b9;
+  --gq-blue-dark: #24577a;
+  --gq-ink: #252b33;
+}
+
+.wy-side-nav-search {
+  background: var(--gq-blue);
+}
+
+.wy-nav-top {
+  background: var(--gq-blue);
+}
+
+.gq-version-select {
+  appearance: auto;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 0;
+  color: #000;
+  cursor: pointer;
+  font-family: Arial, sans-serif;
+  font-size: 13.44px;
+  height: 32px;
+  margin: 0;
+  min-width: 88px;
+  padding: 6px 8px;
+}
+
+.gq-version-select:focus {
+  outline: 1px solid var(--gq-blue);
+  outline-offset: 1px;
+}
+
+.gq-sidebar-version {
+  margin: -0.4em 0 0.8em;
+  text-align: center;
+}
+
+.wy-menu-vertical a:active,
+.wy-menu-vertical li.current > a {
+  border-color: var(--gq-blue-dark);
+}
+
+.rst-content code.literal {
+  color: #7a2f2f;
+}
+
+.rst-content #dependencies ul.simple {
+  list-style: disc;
+  margin-left: 24px;
+}
+
+.rst-content #dependencies ul.simple li {
+  display: list-item;
+  list-style: disc;
+}
+
+.rst-content .gq-usage div[class^="highlight"] {
+  overflow-x: visible;
+}
+
+.rst-content .gq-usage div[class^="highlight"] pre {
+  overflow-wrap: anywhere;
+  overflow-x: visible;
+  white-space: pre-wrap;
+}
+
+.rst-content img {
+  height: auto;
+}
+
+.rst-content .section > h1,
+.rst-content .section > h2 {
+  color: var(--gq-ink);
+}

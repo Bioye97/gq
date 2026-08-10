@@ -1,0 +1,41 @@
+netcdf topobath_decimal {
+dimensions:
+	z = 2 ;
+	y = 4 ;
+	x = 4 ;
+variables:
+	double z(z) ;
+		z:axis = "Z" ;
+		z:units = "km" ;
+		z:positive = "down" ;
+	double y(y) ;
+		y:axis = "Y" ;
+		y:units = "km" ;
+	double x(x) ;
+		x:axis = "X" ;
+		x:units = "km" ;
+	float vp(z, y, x) ;
+		vp:long_name = "compressional velocity" ;
+		vp:units = "km/s" ;
+		vp:_FillValue = -9999.f ;
+	float quality(y, x) ;
+		quality:long_name = "horizontal quality flag" ;
+data:
+	z = 0, 1 ;
+	y = 0, 0.2, 0.4, 0.6 ;
+	x = 0, 0.2, 0.4, 0.6 ;
+	vp =
+	 10, 10, 10, 10,
+	 10, 10, 10, 10,
+	 10, 10, 10, 10,
+	 10, 10, 10, 10,
+	 9, 9, 9, 9,
+	 9, 9, 9, 9,
+	 9, 9, 9, 9,
+	 9, 9, 9, 9 ;
+	quality =
+	 1, 2, 3, 4,
+	 5, 6, 7, 8,
+	 9, 10, 11, 12,
+	 13, 14, 15, 16 ;
+}

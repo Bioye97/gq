@@ -1,0 +1,18 @@
+netcdf topobath_ocean {
+dimensions:
+	y = 2 ;
+	x = 2 ;
+variables:
+	double y(y) ;
+		y:axis = "Y" ;
+		y:units = "km" ;
+	double x(x) ;
+		x:axis = "X" ;
+		x:units = "km" ;
+	float mask(y, x) ;
+		mask:long_name = "land mask" ;
+data:
+	y = 0, 1 ;
+	x = 0, 1 ;
+	mask = 0, 0, 0, 0 ;
+}

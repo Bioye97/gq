@@ -1,0 +1,27 @@
+netcdf gaps2d {
+dimensions:
+	y = 7 ;
+	x = 7 ;
+variables:
+	double y(y) ;
+		y:actual_range = 0., 6. ;
+	double x(x) ;
+		x:actual_range = 0., 6. ;
+	float z(y, x) ;
+		z:_FillValue = -9999.f ;
+
+// global attributes:
+		:Conventions = "COARDS" ;
+		:node_offset = 0 ;
+data:
+	y = 0, 1, 2, 3, 4, 5, 6 ;
+	x = 0, 1, 2, 3, 4, 5, 6 ;
+	z =
+	  10, 10, 10, 10, 10, 10, 10,
+	  10, 10, 10, 10, 10, 10, 10,
+	  10, 10, _,  10, 10, 10, 10,
+	  _,  10, 10, 10, 10, 10, 10,
+	  10, 10, 10, 10, _,  _,  10,
+	  10, 10, 10, 10, _,  _,  10,
+	  10, 10, 10, 10, 10, 10, 10 ;
+}

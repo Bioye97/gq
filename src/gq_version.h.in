@@ -1,0 +1,35 @@
+/*--------------------------------------------------------------------
+ *
+ * Copyright (c) 2024-2026 by the CRESCENT CVM Team (https://cascadiaquakes.org/cvm/)
+ * See LICENSE for copying and redistribution conditions.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation; version 3 or any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * Contact info: abioyeajala@gmail.com (Rasheed Ajala)
+ *--------------------------------------------------------------------*/
+
+#ifndef GQ_VERSION_H
+#define GQ_VERSION_H
+
+#define GQ_PACKAGE_NAME "@GQ_PACKAGE_NAME@"
+#define GQ_PACKAGE_DESCRIPTION "@GQ_PACKAGE_DESCRIPTION_SUMMARY@"
+#define GQ_PACKAGE_VERSION "@GQ_PACKAGE_VERSION@"
+#define GQ_PACKAGE_VERSION_MAJOR @GQ_PACKAGE_VERSION_MAJOR@
+#define GQ_PACKAGE_VERSION_MINOR @GQ_PACKAGE_VERSION_MINOR@
+#define GQ_PACKAGE_VERSION_PATCH @GQ_PACKAGE_VERSION_PATCH@
+#define GQ_PACKAGE_VERSION_STRING "@GQ_PACKAGE_NAME@ @GQ_PACKAGE_VERSION@"
+
+#define GQ_VERSION "@PROJECT_VERSION@"
+#define GQ_VERSION_MAJOR @PROJECT_VERSION_MAJOR@
+#define GQ_VERSION_MINOR @PROJECT_VERSION_MINOR@
+#define GQ_VERSION_PATCH @PROJECT_VERSION_PATCH@
+#define GQ_VERSION_STRING "@GQ_PACKAGE_NAME@ @PROJECT_VERSION@"
+
+#endif /* GQ_VERSION_H */

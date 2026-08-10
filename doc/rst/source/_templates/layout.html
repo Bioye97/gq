@@ -1,0 +1,30 @@
+{% extends "!layout.html" %}
+
+{% block sidebartitle %}
+
+{% if logo and theme_logo_only %}
+  <a href="{{ pathto(master_doc) }}">
+{% else %}
+  <a href="{{ pathto(master_doc) }}" class="icon icon-home"> {{ project }}
+{% endif %}
+
+{% if logo %}
+  <img src="{{ pathto('_static/' + logo, 1) }}" class="logo" alt="Logo"/>
+{% endif %}
+</a>
+
+{% if gq_versions %}
+  <div class="version gq-sidebar-version">
+    <select class="gq-version-select" aria-label="Documentation version" title="Documentation version">
+      {% for label, url in gq_versions %}
+        <option value="{{ url or pathto(master_doc) }}"{% if label == gq_current_version %} selected="selected"{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </div>
+{% elif theme_display_version and version %}
+  <div class="version">{{ version }}</div>
+{% endif %}
+
+{% include "searchbox.html" %}
+
+{% endblock %}

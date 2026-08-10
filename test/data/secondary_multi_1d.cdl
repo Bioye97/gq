@@ -1,0 +1,15 @@
+netcdf secondary_multi_1d {
+dimensions:
+	x = 5 ;
+variables:
+	double x(x) ;
+		x:units = "km" ;
+	double p(x) ;
+		p:units = "km/s" ;
+	double s(x) ;
+		s:units = "km/s" ;
+data:
+	x = 0, 1, 2, 3, 4 ;
+	p = 2, 2, 2, 2, 2 ;
+	s = 3, 3, 3, 3, 3 ;
+}

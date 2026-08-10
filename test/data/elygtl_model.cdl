@@ -1,0 +1,46 @@
+netcdf elygtl_model {
+dimensions:
+	z = 3 ;
+	y = 2 ;
+	x = 2 ;
+variables:
+	double z(z) ;
+		z:axis = "Z" ;
+		z:units = "m" ;
+		z:positive = "down" ;
+	double y(y) ;
+		y:axis = "Y" ;
+		y:units = "m" ;
+	double x(x) ;
+		x:axis = "X" ;
+		x:units = "m" ;
+	float vs(z, y, x) ;
+		vs:long_name = "S-wave velocity" ;
+		vs:units = "m s-1" ;
+		vs:_FillValue = -9999.f ;
+	float vp0(z, y, x) ;
+		vp0:long_name = "P-wave velocity" ;
+		vp0:units = "m s-1" ;
+		vp0:_FillValue = -9999.f ;
+	float quality(z, y, x) ;
+		quality:long_name = "unselected model property" ;
+	int crs ;
+		crs:grid_mapping_name = "cartesian" ;
+data:
+	z = 0, 175, 350 ;
+	y = 0, 1 ;
+	x = 0, 1 ;
+	vs =
+	 600, 600, 600, 600,
+	 800, 800, 800, 800,
+	 1000, 1000, 1000, 1000 ;
+	vp0 =
+	 1600, 1600, 1600, 1600,
+	 1800, 1800, 1800, 1800,
+	 2000, 2000, 2000, 2000 ;
+	quality =
+	 31, 32, 33, 34,
+	 21, 22, 23, 24,
+	 11, 12, 13, 14 ;
+	crs = 7 ;
+}

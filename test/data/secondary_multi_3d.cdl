@@ -1,0 +1,32 @@
+netcdf secondary_multi_3d {
+dimensions:
+	x = 3 ;
+	z = 3 ;
+	y = 3 ;
+variables:
+	double x(x) ;
+		x:axis = "X" ;
+		x:units = "km" ;
+	double z(z) ;
+		z:axis = "Z" ;
+		z:units = "km" ;
+	double y(y) ;
+		y:axis = "Y" ;
+		y:units = "km" ;
+	float p(x, z, y) ;
+		p:units = "km/s" ;
+	float rho(x, z, y) ;
+		rho:units = "kg/m3" ;
+data:
+	x = 0, 1, 2 ;
+	z = 0, 1, 2 ;
+	y = 0, 1, 2 ;
+	p =
+	 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	 0, 0, 0, 0, 0, 0, 0, 0, 0 ;
+	rho =
+	 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	 0, 0, 0, 0, 0, 0, 0, 0, 0 ;
+}

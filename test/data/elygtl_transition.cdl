@@ -1,0 +1,20 @@
+netcdf elygtl_transition {
+dimensions:
+	y = 2 ;
+	x = 2 ;
+variables:
+	double y(y) ;
+		y:axis = "Y" ;
+		y:units = "m" ;
+	double x(x) ;
+		x:axis = "X" ;
+		x:units = "m" ;
+	float depth(y, x) ;
+		depth:units = "m" ;
+data:
+	y = 0, 1 ;
+	x = 0, 1 ;
+	depth =
+	 350, 350,
+	 262.5, 350 ;
+}

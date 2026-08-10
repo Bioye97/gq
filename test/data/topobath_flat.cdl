@@ -1,0 +1,63 @@
+netcdf topobath_flat {
+dimensions:
+	z = 7 ;
+	y = 2 ;
+	x = 2 ;
+variables:
+	double z(z) ;
+		z:axis = "Z" ;
+		z:units = "km" ;
+		z:positive = "down" ;
+	double y(y) ;
+		y:axis = "Y" ;
+		y:units = "km" ;
+	double x(x) ;
+		x:axis = "X" ;
+		x:units = "km" ;
+	float vp(z, y, x) ;
+		vp:long_name = "compressional velocity" ;
+		vp:units = "km/s" ;
+		vp:_FillValue = -9999.f ;
+	float vs(z, y, x) ;
+		vs:long_name = "shear velocity" ;
+		vs:units = "km/s" ;
+		vs:_FillValue = -9999.f ;
+	float ignored(z, y, x) ;
+		ignored:_FillValue = -9999.f ;
+	int crs ;
+		crs:grid_mapping_name = "cartesian" ;
+	float quality(y, x) ;
+		quality:long_name = "horizontal quality flag" ;
+data:
+	z = -3, -2, -1, 0, 1, 2, 3 ;
+	y = 0, 1 ;
+	x = 0, 1 ;
+	vp =
+	 -9999, -9999, -9999, -9999,
+	 -9999, -9999, -9999, -9999,
+	 -9999, -9999, -9999, -9999,
+	 10, 10, 10, 10,
+	 9, 9, 9, 9,
+	 8, 8, 8, 8,
+	 7, 7, 7, 7 ;
+	vs =
+	 -9999, -9999, -9999, -9999,
+	 -9999, -9999, -9999, -9999,
+	 -9999, -9999, -9999, -9999,
+	 20, 20, 20, 20,
+	 18, 18, 18, 18,
+	 16, 16, 16, 16,
+	 14, 14, 14, 14 ;
+	ignored =
+	 -9999, -9999, -9999, -9999,
+	 -9999, -9999, -9999, -9999,
+	 -9999, -9999, -9999, -9999,
+	 1, 1, 1, 1,
+	 1, 1, 1, 1,
+	 1, 1, 1, 1,
+	 1, 1, 1, 1 ;
+	crs = 1 ;
+	quality =
+	 1, 2,
+	 3, 4 ;
+}

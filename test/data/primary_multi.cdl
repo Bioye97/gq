@@ -1,0 +1,40 @@
+netcdf primary_multi {
+dimensions:
+	y = 5 ;
+	x = 5 ;
+variables:
+	double y(y) ;
+		y:actual_range = 0., 4. ;
+	double x(x) ;
+		x:actual_range = 0., 4. ;
+	float vp(y, x) ;
+	float vs(y, x) ;
+		vs:_FillValue = -99999.f ;
+	float den(y, x) ;
+		den:_FillValue = -99999.f ;
+
+// global attributes:
+		:Conventions = "COARDS" ;
+		:node_offset = 0 ;
+data:
+	y = 0, 1, 2, 3, 4 ;
+	x = 0, 1, 2, 3, 4 ;
+	vp =
+	  10, 10, 10, 10, 10,
+	  10, 10, 10, 10, 10,
+	  10, 10, -99999, 10, 10,
+	  10, 10, 10, 10, 10,
+	  10, 10, 10, 10, 10 ;
+	vs =
+	  20, 20, 20, 20, 20,
+	  20, 20, 20, 20, 20,
+	  20, 20, 20, 20, 20,
+	  20, 20, 20, 20, 20,
+	  20, 20, 20, 20, 20 ;
+	den =
+	  30, 30, 30, 30, 30,
+	  30, 30, 30, 30, 30,
+	  30, 30, 30, 30, 30,
+	  30, 30, 30, 30, 30,
+	  30, 30, 30, 30, 30 ;
+}

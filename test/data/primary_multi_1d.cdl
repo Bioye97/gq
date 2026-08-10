@@ -1,0 +1,15 @@
+netcdf primary_multi_1d {
+dimensions:
+	x = 5 ;
+variables:
+	double x(x) ;
+		x:units = "km" ;
+	double vp(x) ;
+		vp:units = "km/s" ;
+	double vs(x) ;
+		vs:units = "km/s" ;
+data:
+	x = 0, 1, 2, 3, 4 ;
+	vp = 10, 10, -99999, 10, 10 ;
+	vs = 20, 20, 20, 20, 20 ;
+}

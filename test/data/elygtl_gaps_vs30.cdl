@@ -1,0 +1,21 @@
+netcdf elygtl_gaps_vs30 {
+dimensions:
+	y = 3 ;
+	x = 3 ;
+variables:
+	double y(y) ;
+		y:axis = "Y" ;
+		y:units = "m" ;
+	double x(x) ;
+		x:axis = "X" ;
+		x:units = "m" ;
+	float vs30(y, x) ;
+		vs30:units = "m s-1" ;
+data:
+	y = 0, 1, 2 ;
+	x = 0, 1, 2 ;
+	vs30 =
+	 400, 400, 400,
+	 400, 400, 400,
+	 400, 400, 400 ;
+}

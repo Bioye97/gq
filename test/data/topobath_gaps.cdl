@@ -1,0 +1,30 @@
+netcdf topobath_gaps {
+dimensions:
+	z = 4 ;
+	y = 2 ;
+	x = 2 ;
+variables:
+	double z(z) ;
+		z:axis = "Z" ;
+		z:units = "km" ;
+		z:positive = "down" ;
+	double y(y) ;
+		y:axis = "Y" ;
+		y:units = "km" ;
+	double x(x) ;
+		x:axis = "X" ;
+		x:units = "km" ;
+	float vp(z, y, x) ;
+		vp:long_name = "compressional velocity" ;
+		vp:units = "km/s" ;
+		vp:_FillValue = -9999.f ;
+data:
+	z = 0, 1, 2, 3 ;
+	y = 0, 1 ;
+	x = 0, 1 ;
+	vp =
+	 10, 10, 10, 10,
+	 9, 9, 9, 9,
+	 -9999, -9999, -9999, -9999,
+	 7, 7, 7, 7 ;
+}

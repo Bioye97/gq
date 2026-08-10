@@ -1,0 +1,144 @@
+#!/bin/sh
+#
+# Copyright (c) 2024-2026 by the CRESCENT CVM Team (https://cascadiaquakes.org/cvm/)
+# See LICENSE for copying and redistribution conditions.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation; version 3 or any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# Contact info: abioyeajala@gmail.com (Rasheed Ajala)
+#-------------------------------------------------------------------------------
+#
+
+#
+# Uninstall files installed by GQ.
+
+set -e
+
+prefix="@CMAKE_INSTALL_PREFIX@"
+plugin_dir="@GQ_INSTALL_PLUGINDIR@"
+dry_run=0
+
+usage()
+{
+	cat << EOF
+Usage: gq_uninstall.sh [--prefix PATH] [--plugindir PATH] [--dry-run] [--help]
+
+Remove files installed by GQ.
+
+Options:
+  --prefix PATH     Override the GQ installation prefix [${prefix}]
+  --plugindir PATH  Override the GMT plugin directory [${plugin_dir}]
+  --dry-run         Print paths that would be removed without removing them
+  --help            Show this help message
+EOF
+}
+
+remove_path()
+{
+	if [ -e "$1" ] || [ -L "$1" ]; then
+		if [ "${dry_run}" -eq 1 ]; then
+			printf 'Would remove %s\n' "$1"
+		else
+			rm -f "$1"
+			printf 'Removed %s\n' "$1"
+		fi
+	fi
+}
+
+remove_empty_dir()
+{
+	if [ -d "$1" ]; then
+		if [ "${dry_run}" -eq 1 ]; then
+			printf 'Would remove directory if empty %s\n' "$1"
+		else
+			rmdir "$1" 2>/dev/null || true
+		fi
+	fi
+}
+
+remove_dir_tree()
+{
+	if [ -d "$1" ]; then
+		if [ "${dry_run}" -eq 1 ]; then
+			printf 'Would remove directory tree %s\n' "$1"
+		else
+			rm -rf "$1"
+			printf 'Removed directory tree %s\n' "$1"
+		fi
+	fi
+}
+
+while [ "$#" -gt 0 ]; do
+	case "$1" in
+		--prefix)
+			if [ "$#" -lt 2 ]; then
+				printf 'gq_uninstall.sh: --prefix requires a path\n' >&2
+				exit 1
+			fi
+			prefix="$2"
+			shift 2
+			;;
+		--plugindir)
+			if [ "$#" -lt 2 ]; then
+				printf 'gq_uninstall.sh: --plugindir requires a path\n' >&2
+				exit 1
+			fi
+			plugin_dir="$2"
+			shift 2
+			;;
+		--dry-run)
+			dry_run=1
+			shift
+			;;
+		--help|-h)
+			usage
+			exit 0
+			;;
+		*)
+			printf 'gq_uninstall.sh: unknown option %s\n' "$1" >&2
+			usage >&2
+			exit 1
+			;;
+	esac
+done
+
+script_dir=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
+
+case "@GQ_INSTALL_DOCDIR@" in
+	/*) doc_dir="@GQ_INSTALL_DOCDIR@" ;;
+	*) doc_dir="${prefix}/@GQ_INSTALL_DOCDIR@" ;;
+esac
+case "@CMAKE_INSTALL_MANDIR@" in
+	/*) man_dir="@CMAKE_INSTALL_MANDIR@/man1" ;;
+	*) man_dir="${prefix}/@CMAKE_INSTALL_MANDIR@/man1" ;;
+esac
+
+remove_path "${plugin_dir}/gq.so"
+remove_path "${doc_dir}/LICENSE"
+remove_path "${doc_dir}/NOTICE"
+remove_path "${doc_dir}/ChangeLog"
+remove_path "${doc_dir}/gq.pdf"
+remove_dir_tree "${doc_dir}/examples"
+remove_dir_tree "${doc_dir}/html"
+remove_empty_dir "${doc_dir}"
+
+for module in merge1d merge2d merge3d topobath elygtl ssh1d ssh2d ssh3d; do
+	remove_path "${man_dir}/${module}.1"
+done
+remove_empty_dir "${man_dir}"
+
+remove_path "${script_dir}/gq_uninstall.sh"
+remove_empty_dir "${script_dir}"
+
+if [ "${dry_run}" -eq 1 ]; then
+	printf 'Dry run complete.\n'
+else
+	printf 'GQ uninstall complete.\n'
+fi

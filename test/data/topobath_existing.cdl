@@ -1,0 +1,43 @@
+netcdf topobath_existing {
+dimensions:
+	z = 7 ;
+	y = 2 ;
+	x = 2 ;
+variables:
+	double z(z) ;
+		z:axis = "Z" ;
+		z:units = "km" ;
+		z:positive = "down" ;
+	double y(y) ;
+		y:axis = "Y" ;
+		y:units = "km" ;
+	double x(x) ;
+		x:axis = "X" ;
+		x:units = "km" ;
+	float vp(z, y, x) ;
+		vp:units = "km/s" ;
+		vp:_FillValue = -9999.f ;
+	float vs(z, y, x) ;
+		vs:units = "km/s" ;
+		vs:_FillValue = -9999.f ;
+data:
+	z = -3, -2, -1, 0, 1, 2, 3 ;
+	y = 0, 1 ;
+	x = 0, 1 ;
+	vp =
+	 -9999, -9999, -9999, -9999,
+	 -9999, -9999, -9999, -9999,
+	 10, -9999, -9999, -9999,
+	 9, 1.5, 10, 1.5,
+	 8, 10, 9, 1.5,
+	 7, 9, 8, 10,
+	 6, 8, 7, 9 ;
+	vs =
+	 -9999, -9999, -9999, -9999,
+	 -9999, -9999, -9999, -9999,
+	 20, -9999, -9999, -9999,
+	 18, 0, 20, 0,
+	 16, 20, 18, 0,
+	 14, 18, 16, 20,
+	 12, 16, 14, 18 ;
+}

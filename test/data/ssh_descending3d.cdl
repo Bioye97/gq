@@ -1,0 +1,23 @@
+// Copyright (c) 2024-2026 by the CRESCENT CVM Team (https://cascadiaquakes.org/cvm/)
+// See LICENSE for copying and redistribution conditions.
+netcdf ssh_descending3d {
+dimensions:
+	z = 3 ;
+	y = 2 ;
+	x = 2 ;
+variables:
+	double z(z) ;
+		z:axis = "Z" ;
+	double y(y) ;
+		y:axis = "Y" ;
+	double x(x) ;
+		x:axis = "X" ;
+	float vp(z, y, x) ;
+data:
+	z = 0, -1, -2 ;
+	y = 0, 1 ;
+	x = 0, 1 ;
+	vp = 100, 100, 100, 100,
+	     200, 200, 200, 200,
+	     300, 300, 300, 300 ;
+}

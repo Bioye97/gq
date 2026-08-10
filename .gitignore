@@ -1,0 +1,65 @@
+# Operating-system and editor files
+.DS_Store
+*~
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# User-local CMake configuration
+/cmake/ConfigUser.cmake
+
+# Build and local installation directories
+/build/
+/build-*/
+/cmake-build-*/
+/test_install/
+/test-output*/
+
+# Accidental in-source CMake or Ninja products
+/CMakeCache.txt
+/CMakeFiles/
+/CTestTestfile.cmake
+/Makefile
+/Testing/
+/build.ninja
+/cmake_install.cmake
+/compile_commands.json
+/install_manifest*.txt
+/.ninja_deps
+/.ninja_log
+
+# Generated documentation outside a build tree
+/doc/html/
+/doc/latex/
+/doc/man/
+
+# Compiled objects, libraries, and debug bundles
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+*.dSYM/
+
+# GMT session and history files
+gmt.conf
+.gmt.conf
+gmt.history
+.gmt/
+gmt_session.*
+
+# Python caches
+__pycache__/
+*.py[cod]
+
+# Test, coverage, and temporary output
+.coverage
+coverage.xml
+lcov.info
+*.gcda
+*.gcno
+*.gcov
+*.log
+*.tmp
+*.part

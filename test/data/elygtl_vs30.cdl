@@ -1,0 +1,22 @@
+netcdf elygtl_vs30 {
+dimensions:
+	y = 2 ;
+	x = 2 ;
+variables:
+	double y(y) ;
+		y:axis = "Y" ;
+		y:units = "m" ;
+	double x(x) ;
+		x:axis = "X" ;
+		x:units = "m" ;
+	float vs30(y, x) ;
+		vs30:long_name = "time-averaged shear-wave velocity in upper 30 m" ;
+		vs30:units = "m s-1" ;
+		vs30:_FillValue = -9999.f ;
+data:
+	y = 0, 1 ;
+	x = 0, 1 ;
+	vs30 =
+	 400, 400,
+	 400, -9999 ;
+}

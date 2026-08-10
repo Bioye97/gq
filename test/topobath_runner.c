@@ -1,0 +1,66 @@
+/*--------------------------------------------------------------------
+ *
+ * Copyright (c) 2024-2026 by the CRESCENT CVM Team (https://cascadiaquakes.org/cvm/)
+ * See LICENSE for copying and redistribution conditions.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation; version 3 or any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * Contact info: abioyeajala@gmail.com (Rasheed Ajala)
+ *--------------------------------------------------------------------*/
+
+#include <gmt.h>
+
+#include <dlfcn.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef int (*topobath_function)(void *, int, void *);
+
+int main(int argc, char **argv)
+{
+	const char *plugin_path = getenv("GQ_PLUGIN");
+	void *plugin = NULL, *API = NULL;
+	topobath_function topobath;
+	char command[8192] = {0};
+	size_t used = 0;
+	int k, status;
+
+	if (plugin_path == NULL || argc < 2) return EXIT_FAILURE;
+	plugin = dlopen(plugin_path, RTLD_NOW | RTLD_GLOBAL);
+	if (plugin == NULL) {
+		fprintf(stderr, "%s\n", dlerror());
+		return EXIT_FAILURE;
+	}
+	topobath = (topobath_function)dlsym(plugin, "GMT_topobath");
+	if (topobath == NULL) {
+		fprintf(stderr, "%s\n", dlerror());
+		dlclose(plugin);
+		return EXIT_FAILURE;
+	}
+	for (k = 1; k < argc; k++) {
+		int written = snprintf(command + used, sizeof(command) - used,
+		                       "%s%s", k == 1 ? "" : " ", argv[k]);
+		if (written < 0 || (size_t)written >= sizeof(command) - used) {
+			dlclose(plugin);
+			return EXIT_FAILURE;
+		}
+		used += (size_t)written;
+	}
+	API = GMT_Create_Session("topobath-test", 2U, 0U, NULL);
+	if (API == NULL) {
+		dlclose(plugin);
+		return EXIT_FAILURE;
+	}
+	status = topobath(API, GMT_MODULE_CMD, command);
+	if (GMT_Destroy_Session(API) != GMT_NOERROR) status = EXIT_FAILURE;
+	dlclose(plugin);
+	return status == GMT_NOERROR ? EXIT_SUCCESS : EXIT_FAILURE;
+}

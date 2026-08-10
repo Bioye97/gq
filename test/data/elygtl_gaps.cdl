@@ -1,0 +1,35 @@
+netcdf elygtl_gaps {
+dimensions:
+	z = 3 ;
+	y = 3 ;
+	x = 3 ;
+variables:
+	double z(z) ;
+		z:axis = "Z" ;
+		z:units = "m" ;
+		z:positive = "down" ;
+	double y(y) ;
+		y:axis = "Y" ;
+		y:units = "m" ;
+	double x(x) ;
+		x:axis = "X" ;
+		x:units = "m" ;
+	float vs(z, y, x) ;
+		vs:long_name = "S-wave velocity" ;
+		vs:units = "m s-1" ;
+		vs:_FillValue = -9999.f ;
+data:
+	z = 0, 175, 350 ;
+	y = 0, 1, 2 ;
+	x = 0, 1, 2 ;
+	vs =
+	 600, 600, 600,
+	 600, 600, 600,
+	 600, 600, 600,
+	 -9999, 800, 800,
+	 800, 800, 800,
+	 800, 800, 800,
+	 1000, 1000, 1000,
+	 1000, -9999, 1000,
+	 1000, 1000, 1000 ;
+}

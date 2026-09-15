@@ -345,6 +345,12 @@ static int usage(struct GMTAPI_CTRL *API, int level)
 	GMT_Usage(API, -2,
 	          "Include the shared merging weight. For text it is appended as "
 	          "the final column. Append +o for coordinate and weight only.");
+	GMT_Usage(API, 3, "Weights follow paired supports in mergefile order. The first support "
+	          "containing the coordinate supplies its primary weight; outside it, later supports "
+	          "remain visible. Zero-valued support boundaries are retained. With -A, sum and cap "
+	          "weights at 1 only where positive weights overlap with the same secondary. "
+	          "Unpaired background weights are 0. These shared taper weights do not represent "
+	          "final per-source fractions or field-specific missing-value replacements.");
 	GMT_Usage(API, 1, "\n-Z[+x<scale>][+X<unit>][+v<scales>][+V<units>]");
 	GMT_Usage(API, -2,
 	          "Transform output coordinates and fields after merging. Unlike "
@@ -1594,6 +1600,40 @@ static int merge1d_support_weight(const struct MERGE1D_SPEC *spec, double x,
 	return GMT_NOERROR;
 }
 
+/* Select the first support, not its potentially much wider input domain. */
+static int merge1d_report_weight(const struct MERGE1D_CTRL *Ctrl,
+                                 const struct MERGE1D_JOB *job, double x,
+                                 double *weight)
+{
+	size_t k, owner = SIZE_MAX;
+	*weight = 0.0;
+	for (k = 0; k < job->count; k++) {
+		const struct MERGE1D_SPEC *spec = &job->spec[k];
+		if (x < spec->primary.x[0] || x > spec->primary.x[spec->primary.n - 1])
+			continue;
+		if (!spec->has_secondary) return GMT_NOERROR;
+		if (x < spec->west || x > spec->east) continue;
+		owner = k;
+		if (merge1d_support_weight(spec, x, weight)) return GMT_RUNTIME_ERROR;
+		break;
+	}
+	/* A zero on the selected support boundary is a valid weight. */
+	if (!Ctrl->A.active || owner == SIZE_MAX || *weight <= 0.0)
+		return GMT_NOERROR;
+	for (k = owner + 1; k < job->count; k++) {
+		const struct MERGE1D_SPEC *spec = &job->spec[k];
+		double other;
+		if (!spec->has_secondary ||
+		    strcmp(spec->secondary_source, job->spec[owner].secondary_source) ||
+		    !strcmp(spec->primary_source, job->spec[owner].secondary_source) ||
+		    x < spec->primary.x[0] || x > spec->primary.x[spec->primary.n - 1] ||
+		    x < spec->west || x > spec->east) continue;
+		if (merge1d_support_weight(spec, x, &other)) return GMT_RUNTIME_ERROR;
+		if (other > 0.0) *weight = MIN(1.0, *weight + other);
+	}
+	return GMT_NOERROR;
+}
+
 static int merge1d_validate_overlap_axis(struct GMT_CTRL *GMT,
                                          const struct MERGE1D_JOB *job,
                                          const double *axis, size_t n_axis)
@@ -1688,17 +1728,8 @@ static int merge1d_compute_regular(const struct MERGE1D_CTRL *Ctrl,
 	size_t field, i, k;
 
 	for (i = 0; i < n_axis; i++) {
-		weights[i] = 0.0;
-		for (k = 0; k < job->count; k++) {
-			const struct MERGE1D_SPEC *spec = &job->spec[k];
-			if (axis[i] < spec->primary.x[0] ||
-			    axis[i] > spec->primary.x[spec->primary.n - 1])
-				continue;
-			if (spec->has_secondary &&
-			    merge1d_support_weight(spec, axis[i], &weights[i]))
-				return GMT_RUNTIME_ERROR;
-			break;
-		}
+		if (merge1d_report_weight(Ctrl, job, axis[i], &weights[i]))
+			return GMT_RUNTIME_ERROR;
 		for (field = 0; field < job->n_fields; field++) {
 			output[field][i] = NAN;
 			for (k = 0; k < job->count; k++) {
@@ -1764,7 +1795,8 @@ static int merge1d_compute_aggregate(const struct MERGE1D_CTRL *Ctrl,
 				sum_geometry += weight;
 			}
 		}
-		weights[i] = MIN(1.0, sum_geometry);
+		if (merge1d_report_weight(Ctrl, job, axis[i], &weights[i]))
+			return GMT_RUNTIME_ERROR;
 		for (field = 0; field < job->n_fields; field++) {
 			bool any_finite_primary = false;
 			double sum_valid = 0.0, sum_values = 0.0;

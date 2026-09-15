@@ -192,6 +192,38 @@ run_checked("${GQ_CHECK_TABLE}" "${GQ_TEST_DIR}/nonoverlap.txt"
 run_checked("${GQ_CHECK_TABLE}" "${GQ_TEST_DIR}/nonoverlap.txt"
 	8 1 30 1e-10)
 
+# Ordered supports must expose every hierarchy level even when grids share a domain.
+foreach(value 10 20 0 100)
+	file(WRITE "${GQ_TEST_DIR}/weight_${value}.txt"
+		"0 ${value}\n1 ${value}\n2 ${value}\n3 ${value}\n4 ${value}\n5 ${value}\n")
+endforeach()
+file(WRITE "${GQ_TEST_DIR}/weight_order.merge"
+	"${GQ_TEST_DIR}/weight_10.txt ${GQ_TEST_DIR}/weight_0.txt 0/2 cosine 0.25\n"
+	"${GQ_TEST_DIR}/weight_20.txt ${GQ_TEST_DIR}/weight_0.txt 2/4 cosine 0.25\n"
+	"${GQ_TEST_DIR}/weight_0.txt ${GQ_TEST_DIR}/weight_100.txt 0/5 boxcar 0\n"
+	"${GQ_TEST_DIR}/weight_100.txt - - - -\n")
+foreach(mode regular aggregate)
+	set(aggregate_option)
+	if(mode STREQUAL "aggregate")
+		set(aggregate_option -A)
+	endif()
+	foreach(weight_option -W -W+o)
+		run_merge("${GQ_TEST_DIR}/weight_order.merge" -T0/5/1
+			${aggregate_option} ${weight_option} "-G${GQ_TEST_DIR}/weight_order.txt")
+		set(weight_column 2)
+		if(weight_option STREQUAL "-W+o")
+			set(weight_column 1)
+		endif()
+		set(overlap_weight 0.75)
+		if(mode STREQUAL "aggregate")
+			set(overlap_weight 1)
+		endif()
+		run_checked("${GQ_CHECK_TABLE}" "${GQ_TEST_DIR}/weight_order.txt" 2 ${weight_column} ${overlap_weight} 1e-6)
+		run_checked("${GQ_CHECK_TABLE}" "${GQ_TEST_DIR}/weight_order.txt" 4 ${weight_column} 0.75 1e-6)
+		run_checked("${GQ_CHECK_TABLE}" "${GQ_TEST_DIR}/weight_order.txt" 5 ${weight_column} 1 1e-6)
+	endforeach()
+endforeach()
+
 # Multiparameter NetCDF mapping and an undeclared numeric missing sentinel.
 run_checked("${NCGEN_EXECUTABLE}" -o "${GQ_TEST_DIR}/primary_multi.nc"
 	"${GQ_SOURCE_DIR}/test/data/primary_multi_1d.cdl")

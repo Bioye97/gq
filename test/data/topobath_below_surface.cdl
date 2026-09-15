@@ -1,0 +1,21 @@
+netcdf topobath_below_surface {
+dimensions:
+	y = 2 ;
+	x = 2 ;
+variables:
+	double y(y) ;
+		y:axis = "Y" ;
+		y:units = "km" ;
+	double x(x) ;
+		x:axis = "X" ;
+		x:units = "km" ;
+	float elevation(y, x) ;
+		elevation:long_name = "surface elevation" ;
+		elevation:units = "km" ;
+data:
+	y = 0, 1 ;
+	x = 0, 1 ;
+	elevation =
+	 1, 1,
+	 1, 1 ;
+}

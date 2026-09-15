@@ -142,6 +142,19 @@ simultaneously held in memory.
 Usage
 -----
 
+Merging-weight output follows the paired supports in mergefile order. The
+first support containing a node supplies its primary weight; outside that
+support, later supports, including broader parents, remain visible. A zero
+on the selected support boundary is retained. With ``-A``, positive weights
+are summed and capped at 1 only where primaries overlap and share the selected
+secondary. Elsewhere, the regular primary weight is retained. An unpaired
+background has weight 0 in merging mode.
+
+This produces one ordered weight field from the supports in the mergefile,
+without plotting overlays. It describes the primary tapers, not final
+per-source contribution fractions or field-specific missing-value replacements.
+The same selection applies to ``-W`` and ``-W+o``.
+
 .. gq-usage:: merge2d
 
 Examples

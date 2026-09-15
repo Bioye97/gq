@@ -324,6 +324,12 @@ static int usage (struct GMTAPI_CTRL *API, int level) {
 	GMT_Usage (API, 1, "\n-W[+o]");
 	GMT_Usage (API, -2, "Include the shared NetCDF variable weight with long_name='merging weight' and "
 		"units='1'. Append +o to write only the coordinates and weight. All output fields use this same weight.");
+	GMT_Usage(API, 3, "Weights follow paired supports in mergefile order. The first support "
+		"containing a node supplies its primary weight; outside it, later supports remain visible. "
+		"Zero-valued support boundaries are retained. With -A, sum and cap weights at 1 only where "
+		"positive weights overlap with the same secondary. Unpaired background weights are 0. "
+		"These shared taper weights do not represent final per-source fractions or field-specific "
+		"missing-value replacements.");
 	GMT_Usage (API, 1, "\n-Z[+x<sx>][+X<xunit>][+y<sy>][+Y<yunit>]"
 		"[+v<scales>][+V<units>]");
 	GMT_Usage (API, -2, "Transform output coordinates and fields after merging. +x and +y scale output "
@@ -858,6 +864,49 @@ static int merge2d_support_weight_at (struct MERGE2D_PAIR *info, int col, int ro
 	y = info->support_j1 - row;
 	if (embedding_contribution2d(x, y, info->v_data) != SUCCESS) return GMT_RUNTIME_ERROR;
 	*weight = info->v_data->contribution;
+	return GMT_NOERROR;
+}
+
+static bool merge2d_support_contains(const struct MERGE2D_PAIR *info, int col, int row) {
+	const window *support = info->v_data;
+	int x = col - info->support_i0, y = info->support_j1 - row;
+	if (!support || col < info->support_i0 || col > info->support_i1 ||
+	    row < info->support_j0 || row > info->support_j1) return false;
+	return x >= support->nnx1[y] && x <= support->nnx2[y] &&
+	       y >= support->nny1[x] && y <= support->nny2[x];
+}
+
+/* Diagnostic weights follow support priority independently of data fields. */
+static int merge2d_report_weight(const struct MERGE2D_CTRL *Ctrl,
+                                  struct MERGE2D_PAIR *items, unsigned int count,
+                                  int col, int row, bool wrap_x, int nx_360,
+                                  double *weight) {
+	unsigned int k, owner = count;
+	*weight = 0.0;
+	for (k = 0; k < count; k++) {
+		int local_col = col;
+		double value;
+		if (items[k].ignore || items[k].outside) continue;
+		if (wrap_x) {
+			local_col += nx_360;
+			while (local_col > items[k].out_i1) local_col -= nx_360;
+		}
+		if (local_col < items[k].out_i0 || local_col > items[k].out_i1) continue;
+		if (owner == count && !items[k].secondary) break;
+		if (!items[k].secondary || !merge2d_support_contains(&items[k], local_col, row))
+			continue;
+		if (owner < count &&
+		    (strcmp(items[k].s_source, items[owner].s_source) ||
+		     !strcmp(items[k].source, items[owner].s_source))) continue;
+		if (merge2d_support_weight_at(&items[k], local_col, row, &value) != GMT_NOERROR)
+			return GMT_RUNTIME_ERROR;
+		if (owner == count) {
+			owner = k;
+			*weight = value;
+			if (!Ctrl->A.active || value <= 0.0) break;
+		}
+		else if (value > 0.0) *weight = MIN(1.0, *weight + value);
+	}
 	return GMT_NOERROR;
 }
 
@@ -2757,7 +2806,7 @@ static int merge2d_package_netcdf (struct GMTAPI_CTRL *API, const char *output,
 	int input = -1, result = -1, source_var, source_dims[2], output_dims[2];
 	int coord_vars[2] = {-1, -1}, output_coord_vars[2] = {-1, -1};
 	int *output_vars = NULL, weight_var = -1, status = GMT_RUNTIME_ERROR;
-	size_t sizes[2], k, row;
+	size_t sizes[2], chunks[2], k, row;
 	float *buffer = NULL;
 	char dim_names[2][NC_MAX_NAME + 1];
 	if (nc_open(include_data ? data_files[0] : weight_file, NC_NOWRITE, &input) != NC_NOERR ||
@@ -2799,6 +2848,8 @@ static int merge2d_package_netcdf (struct GMTAPI_CTRL *API, const char *output,
 				goto cleanup;
 		}
 	}
+	chunks[0] = sizes[0] < 64 ? sizes[0] : 64;
+	chunks[1] = sizes[1] < 1024 ? sizes[1] : 1024;
 	if (include_data) {
 		output_vars = calloc(fields->count, sizeof(*output_vars));
 		if (output_vars == NULL) goto cleanup;
@@ -2828,7 +2879,9 @@ static int merge2d_package_netcdf (struct GMTAPI_CTRL *API, const char *output,
 				}
 				nc_close(metadata_input);
 			}
-			nc_def_var_deflate(result, output_vars[k], 0, 1, 2);
+			if (nc_def_var_chunking(result, output_vars[k], NC_CHUNKED, chunks) != NC_NOERR ||
+			    nc_def_var_deflate(result, output_vars[k], 0, 1, 2) != NC_NOERR)
+				goto cleanup;
 		}
 	}
 	if (include_weight) {
@@ -2840,7 +2893,9 @@ static int merge2d_package_netcdf (struct GMTAPI_CTRL *API, const char *output,
 		    nc_put_att_text(result, weight_var, "units", 1, "1") != NC_NOERR ||
 		    nc_put_att_float(result, weight_var, "valid_range", NC_FLOAT, 2, valid) != NC_NOERR)
 			goto cleanup;
-		nc_def_var_deflate(result, weight_var, 0, 1, 2);
+		if (nc_def_var_chunking(result, weight_var, NC_CHUNKED, chunks) != NC_NOERR ||
+		    nc_def_var_deflate(result, weight_var, 0, 1, 2) != NC_NOERR)
+			goto cleanup;
 	}
 	if (nc_enddef(result) != NC_NOERR) goto cleanup;
 	for (k = 0; k < 2; k++) {
@@ -2863,20 +2918,21 @@ static int merge2d_package_netcdf (struct GMTAPI_CTRL *API, const char *output,
 		}
 		free(coordinates);
 	}
-	buffer = calloc(sizes[1], sizeof(*buffer));
+	buffer = calloc(chunks[0] * sizes[1], sizeof(*buffer));
 	if (buffer == NULL) goto cleanup;
 	if (include_data) {
 		for (k = 0; k < fields->count; k++) {
 			int field_input = -1, field_var, field_dims[2];
-			size_t field_sizes[2], start[2] = {0, 0}, count[2] = {1, sizes[1]};
+			size_t field_sizes[2], start[2] = {0, 0}, count[2] = {0, sizes[1]};
 			if (nc_open(data_files[k], NC_NOWRITE, &field_input) != NC_NOERR ||
 			    merge2d_netcdf_find_grid(field_input, &field_var, field_dims, field_sizes) != GMT_NOERROR ||
 			    field_sizes[0] != sizes[0] || field_sizes[1] != sizes[1]) {
 				if (field_input >= 0) nc_close(field_input);
 				goto cleanup;
 			}
-			for (row = 0; row < sizes[0]; row++) {
+			for (row = 0; row < sizes[0]; row += chunks[0]) {
 				start[0] = row;
+				count[0] = sizes[0] - row < chunks[0] ? sizes[0] - row : chunks[0];
 				if (nc_get_vara_float(field_input, field_var, start, count, buffer) != NC_NOERR ||
 				    nc_put_vara_float(result, output_vars[k], start, count, buffer) != NC_NOERR) {
 					nc_close(field_input);
@@ -2888,15 +2944,16 @@ static int merge2d_package_netcdf (struct GMTAPI_CTRL *API, const char *output,
 	}
 	if (include_weight) {
 		int weight_input = -1, input_weight_var, weight_dims[2];
-		size_t weight_sizes[2], start[2] = {0, 0}, count[2] = {1, sizes[1]};
+		size_t weight_sizes[2], start[2] = {0, 0}, count[2] = {0, sizes[1]};
 		if (nc_open(weight_file, NC_NOWRITE, &weight_input) != NC_NOERR ||
 		    merge2d_netcdf_find_grid(weight_input, &input_weight_var, weight_dims, weight_sizes) != GMT_NOERROR ||
 		    weight_sizes[0] != sizes[0] || weight_sizes[1] != sizes[1]) {
 			if (weight_input >= 0) nc_close(weight_input);
 			goto cleanup;
 		}
-		for (row = 0; row < sizes[0]; row++) {
+		for (row = 0; row < sizes[0]; row += chunks[0]) {
 			start[0] = row;
+			count[0] = sizes[0] - row < chunks[0] ? sizes[0] - row : chunks[0];
 			if (nc_get_vara_float(weight_input, input_weight_var, start, count, buffer) != NC_NOERR ||
 			    nc_put_vara_float(result, weight_var, start, count, buffer) != NC_NOERR) {
 				nc_close(weight_input);
@@ -3406,6 +3463,10 @@ static int merge2d_run(struct GMT_CTRL *GMT, struct MERGE2D_CTRL *Ctrl,
 			}
 
 merge2d_node_ready:
+			if (Ctrl->W.active && !Ctrl->C.active &&
+			    merge2d_report_weight(Ctrl, merge, n_merge, (int)col, (int)row,
+			                          wrap_x, nx_360, &w) != GMT_NOERROR)
+				return GMT_RUNTIME_ERROR;
 			if (Ctrl->C.sign && m == 0 && not_nan) m = 1, w = 1.0;	/* Since we started off with the first grid and never set m,w at that time. Default clobbering weight is 1 */
 
 			if (m) {	/* OK, at least one grid contributed to an output value */

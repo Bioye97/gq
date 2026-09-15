@@ -232,6 +232,47 @@ run_checked("${GMT_EXECUTABLE}" grdmath -R0/10/0/4 -I1 0 =
 run_checked("${GMT_EXECUTABLE}" grdmath -R0/10/0/4 -I1 100 =
 	"${GQ_TEST_DIR}/other_background.nc")
 
+# Ordered support weights must not be hidden by wider primary grid extents.
+foreach(value 10 20 0 100)
+	run_checked("${GMT_EXECUTABLE}" grdmath -R0/6/0/6 -I1 ${value} =
+		"${GQ_TEST_DIR}/weight_${value}.nc")
+endforeach()
+file(WRITE "${GQ_TEST_DIR}/weight_first.txt" "0 0\n2 0\n2 2\n0 2\n0 0\n")
+file(WRITE "${GQ_TEST_DIR}/weight_second.txt" "1 1\n3 1\n3 3\n1 3\n1 1\n")
+file(WRITE "${GQ_TEST_DIR}/weight_order.merge"
+	"${GQ_TEST_DIR}/weight_10.nc ${GQ_TEST_DIR}/weight_0.nc ${GQ_TEST_DIR}/weight_first.txt cosine/cosine 0.25\n"
+	"${GQ_TEST_DIR}/weight_20.nc ${GQ_TEST_DIR}/weight_0.nc ${GQ_TEST_DIR}/weight_second.txt cosine/cosine 0.25\n"
+	"${GQ_TEST_DIR}/weight_0.nc ${GQ_TEST_DIR}/weight_100.nc - boxcar/boxcar 0\n"
+	"${GQ_TEST_DIR}/weight_100.nc - - - -\n")
+foreach(mode regular aggregate)
+	set(aggregate_option)
+	set(overlap_weight 0.119364378516)
+	if(mode STREQUAL "aggregate")
+		set(aggregate_option -A)
+		set(overlap_weight 1)
+	endif()
+	foreach(weight_option -W -W+o)
+		run_merge("${GQ_TEST_DIR}/weight_order.merge" -R0/6/0/6 -I1
+			${aggregate_option} ${weight_option} "-G${GQ_TEST_DIR}/weight_order.nc")
+		run_checked("${GQ_CHECK_NETCDF}" "${GQ_TEST_DIR}/weight_order.nc" weight 3 3 ${overlap_weight} 1e-6)
+		run_checked("${GQ_CHECK_NETCDF}" "${GQ_TEST_DIR}/weight_order.nc" weight 4 4 0.119364378516 1e-6)
+		run_checked("${GQ_CHECK_NETCDF}" "${GQ_TEST_DIR}/weight_order.nc" weight 6 0 1 1e-6)
+	endforeach()
+endforeach()
+
+# Two partial tapers retain their sum below one.
+file(WRITE "${GQ_TEST_DIR}/weight_second.txt" "0 0\n2 0\n2 2\n0 2\n0 0\n")
+run_merge("${GQ_TEST_DIR}/weight_order.merge" -R0/6/0/6 -I1 -A -W+o
+	"-G${GQ_TEST_DIR}/weight_partial.nc")
+run_checked("${GQ_CHECK_NETCDF}" "${GQ_TEST_DIR}/weight_partial.nc" weight 3 3 0.238728757032 1e-6)
+file(WRITE "${GQ_TEST_DIR}/weight_second.txt" "1 1\n3 1\n3 3\n1 3\n1 1\n")
+
+# A point outside the triangle must use the next support, even inside its box.
+file(WRITE "${GQ_TEST_DIR}/weight_first.txt" "0 0\n2 0\n0 2\n0 0\n")
+run_merge("${GQ_TEST_DIR}/weight_order.merge" -R0/6/0/6 -I1 -W+o
+	"-G${GQ_TEST_DIR}/weight_triangle.nc")
+run_checked("${GQ_CHECK_NETCDF}" "${GQ_TEST_DIR}/weight_triangle.nc" weight 2 2 1 1e-6)
+
 # A paired secondary is restricted to the primary grid domain.
 run_checked("${GMT_EXECUTABLE}" grdmath -R1/3/1/3 -I1 10 =
 	"${GQ_TEST_DIR}/domain_primary.nc")

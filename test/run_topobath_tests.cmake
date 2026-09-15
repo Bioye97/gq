@@ -18,7 +18,7 @@
 file(REMOVE_RECURSE "${GQ_TEST_DIR}")
 file(MAKE_DIRECTORY "${GQ_TEST_DIR}")
 
-foreach(fixture flat surface existing unresolved gaps horizontal_gaps ocean mask missing_surface decimal)
+foreach(fixture flat surface existing unresolved gaps horizontal_gaps ocean mask missing_surface decimal roundoff_surface below_surface)
 	execute_process(
 		COMMAND "${NCGEN_EXECUTABLE}" -o "${GQ_TEST_DIR}/${fixture}.nc"
 		        "${GQ_SOURCE_DIR}/test/data/topobath_${fixture}.cdl"
@@ -443,6 +443,21 @@ run_topobath(wet_clamp -Oa+b "${GQ_TEST_DIR}/flat.nc?vp" "${surface}" -Mp
 	"-E${GQ_TEST_DIR}/flat_surface.nc?elevation"
 	-T-2/3/1 -Wvp/1.5)
 check3(wet_clamp vp 2 0 0 10)
+
+# Sampling an old-surface grid may introduce machine-precision offsets from a
+# model level. Such roundoff must not discard the valid surface sample and
+# create a one-level gap when bathymetry is replaced.
+run_topobath(surface_roundoff -Ox+b "${flat}" "${surface}" -Mp
+	-T-2/3/0.1 ${mask} ${water}
+	"-E${GQ_TEST_DIR}/roundoff_surface.nc?elevation")
+check3(surface_roundoff vp 31 0 1 9.9)
+
+# A scoped operation leaves unselected columns unchanged. In particular, a
+# bathymetry-only replacement must not apply an inferred air mask to land.
+run_topobath(scope_preserves_land -Ox+b "${flat}" "${surface}" -Mp
+	-T0/3/1 ${mask} ${water}
+	"-E${GQ_TEST_DIR}/below_surface.nc?elevation")
+check3(scope_preserves_land vp 0 0 0 10)
 
 # Once an explicit old surface and classification are available, operations
 # that remove water or leave it untouched do not require -W.

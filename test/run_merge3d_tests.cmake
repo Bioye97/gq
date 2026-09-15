@@ -423,6 +423,40 @@ if(status)
 	message(FATAL_ERROR "merge3d hierarchical aggregate weight check failed")
 endif()
 
+file(WRITE "${GQ_TEST_DIR}/weight_first.txt" "0 0\n2 0\n2 2\n0 2\n0 0\n")
+file(WRITE "${GQ_TEST_DIR}/weight_second.txt" "2 2\n4 2\n4 4\n2 4\n2 2\n")
+set(weight_source "${GQ_TEST_DIR}/aggregate_inputs.nc")
+set(weight_transform "+x2+y2+z2")
+file(WRITE "${GQ_TEST_DIR}/weight_order.merge"
+	"${weight_source}?v10${weight_transform} ${weight_source}?s0${weight_transform} ${GQ_TEST_DIR}/weight_first.txt 0/2 cosine 0.25\n"
+	"${weight_source}?v20${weight_transform} ${weight_source}?s0${weight_transform} ${GQ_TEST_DIR}/weight_second.txt 2/4 cosine 0.25\n"
+	"${weight_source}?s0${weight_transform} ${weight_source}?s100${weight_transform} - - boxcar 0\n"
+	"${weight_source}?s100${weight_transform} - - - - -\n")
+foreach(mode regular aggregate)
+	set(aggregate_option)
+	set(overlap_weight 0.421875)
+	if(mode STREQUAL "aggregate")
+		set(aggregate_option -A)
+		set(overlap_weight 1)
+	endif()
+	foreach(weight_option -W -W+o)
+		run_checked("${CMAKE_COMMAND}" -E env "GQ_PLUGIN=${GQ_PLUGIN}"
+			"${GQ_RUNNER}" "${GQ_TEST_DIR}/weight_order.merge"
+			-R0/4/0/4 -I1 -T0/4/1 -Fvp -nl ${aggregate_option} ${weight_option}
+			"-G${GQ_TEST_DIR}/weight_order.nc")
+		run_checked("${GQ_CHECK_NETCDF}" "${GQ_TEST_DIR}/weight_order.nc" weight 2 2 2 ${overlap_weight} 1e-6)
+		run_checked("${GQ_CHECK_NETCDF}" "${GQ_TEST_DIR}/weight_order.nc" weight 4 4 4 0.421875 1e-6)
+		run_checked("${GQ_CHECK_NETCDF}" "${GQ_TEST_DIR}/weight_order.nc" weight 4 4 0 1 1e-6)
+		run_checked("${GQ_CHECK_NETCDF}" "${GQ_TEST_DIR}/weight_order.nc" weight 3 1 1 1 1e-6)
+	endforeach()
+endforeach()
+
+file(WRITE "${GQ_TEST_DIR}/weight_first.txt" "0 0\n2 0\n0 2\n0 0\n")
+run_checked("${CMAKE_COMMAND}" -E env "GQ_PLUGIN=${GQ_PLUGIN}"
+	"${GQ_RUNNER}" "${GQ_TEST_DIR}/weight_order.merge"
+	-R0/4/0/4 -I1 -T0/4/1 -Fvp -nl -W+o "-G${GQ_TEST_DIR}/weight_triangle.nc")
+run_checked("${GQ_CHECK_NETCDF}" "${GQ_TEST_DIR}/weight_triangle.nc" weight 2 2 2 1 1e-6)
+
 file(WRITE "${GQ_TEST_DIR}/overlap_bad.merge"
 	"${GQ_TEST_DIR}/aggregate_inputs.nc?v10 ${GQ_TEST_DIR}/aggregate_inputs.nc?s0 - - boxcar 0\n"
 	"${GQ_TEST_DIR}/aggregate_inputs.nc?v20 ${GQ_TEST_DIR}/aggregate_inputs.nc?s100 - - boxcar 0\n")

@@ -3028,6 +3028,13 @@ static int topobath_interpolate_finite(struct GMT_CTRL *GMT,
 	return GMT_NOERROR;
 }
 
+static bool topobath_above_surface(double coordinate, double surface)
+{
+	double tolerance = 1024.0 * DBL_EPSILON *
+	                   MAX(1.0, MAX(fabs(coordinate), fabs(surface)));
+	return coordinate > surface + tolerance;
+}
+
 static int topobath_transform_field(struct GMT_CTRL *GMT,
                                     const struct TOPOBATH_CTRL *Ctrl,
                                     const struct TOPOBATH_JOB *job,
@@ -3076,9 +3083,10 @@ static int topobath_transform_field(struct GMT_CTRL *GMT,
 
 		for (iz = 0; iz < input_nz; iz++)
 			trace[iz] = input[topobath_field_index(cube, field, ix, iy, iz)];
-		if (land || modified) {
+		if (modified) {
 			for (iz = 0; iz < input_nz; iz++)
-				if (cube->coordinate[TOPOBATH_Z][iz] > old)
+				if (topobath_above_surface(
+				        cube->coordinate[TOPOBATH_Z][iz], old))
 					trace[iz] = NAN;
 		}
 		if (modified && land && !pull &&
@@ -3097,12 +3105,8 @@ static int topobath_transform_field(struct GMT_CTRL *GMT,
 			double source = NAN;
 
 			if (!modified) {
-				if ((wet && z > 0.0) || (land && z > old))
-					value = (float)job->air[field];
-				else {
-					source = z;
-					sample = true;
-				}
+				source = z;
+				sample = true;
 			}
 			else if (wet) {
 				if (z > 0.0)

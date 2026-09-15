@@ -468,6 +468,12 @@ static int usage(struct GMTAPI_CTRL *API, int level)
 	          "Include the shared NetCDF variable weight with long_name='merging weight' "
 	          "and units='1'. Append +o to write only coordinates and weight. All output "
 	          "fields use this same weight.");
+	GMT_Usage(API, 3, "Weights follow paired supports in mergefile order. The first support "
+	          "containing a node supplies its primary weight; outside it, later supports remain "
+	          "visible. Zero-valued support boundaries are retained. With -A, sum and cap weights "
+	          "at 1 only where positive weights overlap with the same secondary. Unpaired "
+	          "background weights are 0. These shared taper weights do not represent final "
+	          "per-source fractions or field-specific missing-value replacements.");
 	GMT_Usage(API, 1,
 	          "\n-Z[+x<sx>][+X<xunit>][+y<sy>][+Y<yunit>]"
 	          "[+z<sz>][+Z<zunit>][+v<scales>][+V<units>]");
@@ -2511,6 +2517,18 @@ static bool merge3d_sign_allowed(int sign, double value, bool initialized)
 	return value >= 0.0;
 }
 
+static bool merge3d_support_contains(const struct MERGE3D_SPEC *spec,
+                                      int col, int row, int layer)
+{
+	const window *support = &spec->support;
+	int x = col - spec->support_i0, y = row - spec->support_j0;
+	if (!spec->support_ready || col < spec->support_i0 || col > spec->support_i1 ||
+	    row < spec->support_j0 || row > spec->support_j1 ||
+	    layer < spec->support_k0 || layer > spec->support_k1) return false;
+	return x >= support->nnx1[y] && x <= support->nnx2[y] &&
+	       y >= support->nny1[x] && y <= support->nny2[x];
+}
+
 static int merge3d_weight_layer(const struct MERGE3D_CTRL *Ctrl,
                                 const struct MERGE3D_JOB *job,
                                 size_t layer, double *weights)
@@ -2530,18 +2548,24 @@ static int merge3d_weight_layer(const struct MERGE3D_CTRL *Ctrl,
 						break;
 					}
 			}
-			else if (Ctrl->A.active) {
+			else {
 				size_t owner = SIZE_MAX;
 				for (k = 0; k < job->count; k++) {
 					if (merge3d_source_covers(&job->spec[k].primary,
 					                          job->x[col], job->y[row],
 					                          job->z[layer])) {
+						if (!job->spec[k].has_secondary) break;
+						if (!merge3d_support_contains(&job->spec[k], (int)col,
+						                              (int)row, (int)layer)) continue;
 						owner = k;
+						if (merge3d_support_weight(&job->spec[k], (int)col,
+						                           (int)row, (int)layer, &value))
+							return GMT_RUNTIME_ERROR;
 						break;
 					}
 				}
-				if (owner < job->count && job->spec[owner].has_secondary)
-				for (k = owner; k < job->count; k++) {
+				if (Ctrl->A.active && owner < job->count && value > 0.0)
+				for (k = owner + 1; k < job->count; k++) {
 					double weight;
 					if (!merge3d_same_secondary(&job->spec[owner],
 					                            &job->spec[k]) ||
@@ -2552,26 +2576,13 @@ static int merge3d_weight_layer(const struct MERGE3D_CTRL *Ctrl,
 					                          job->x[col], job->y[row],
 					                          job->z[layer]))
 						continue;
+					if (!merge3d_support_contains(&job->spec[k], (int)col,
+					                              (int)row, (int)layer)) continue;
 					if (merge3d_support_weight(&job->spec[k], (int)col,
 					                           (int)row, (int)layer,
 					                           &weight))
 						return GMT_RUNTIME_ERROR;
-					value += weight;
-				}
-				value = MIN(1.0, value);
-			}
-			else {
-				for (k = 0; k < job->count; k++) {
-					if (!merge3d_source_covers(&job->spec[k].primary,
-					                          job->x[col], job->y[row],
-					                          job->z[layer]))
-						continue;
-					if (job->spec[k].has_secondary &&
-					    merge3d_support_weight(&job->spec[k], (int)col,
-					                           (int)row, (int)layer,
-					                           &value))
-						return GMT_RUNTIME_ERROR;
-					break;
+					if (weight > 0.0) value = MIN(1.0, value + weight);
 				}
 			}
 			weights[node] = value;
